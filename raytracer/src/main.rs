@@ -1,148 +1,23 @@
+mod hittable;
+mod ray;
+mod sphere;
+mod vec3;
+
 use console::style;
 //use image::flat::View;
+use hittable::*;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
-use std::ops::{Add, BitXor, Mul, Sub};
+use ray::*;
+use sphere::*;
 use std::{fs::File, process::exit};
+use vec3::*;
 
-#[derive(Clone, Copy)]
-struct Vec3 {
-    x: f64,
-    y: f64,
-    z: f64,
-}
-
-impl Add for Vec3 {
-    type Output = Vec3;
-    fn add(self, rhs: Self) -> Self::Output {
-        Self {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-            z: self.z + rhs.z,
-        }
-    }
-}
-
-impl Sub for Vec3 {
-    type Output = Vec3;
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
-            z: self.z - rhs.z,
-        }
-    }
-}
-
-impl BitXor for Vec3 {
-    //cross product
-    type Output = Vec3;
-    fn bitxor(self, rhs: Self) -> Self::Output {
-        Self {
-            x: self.y * rhs.z - self.z * rhs.y,
-            y: self.z * rhs.x - self.x * rhs.z,
-            z: self.x * rhs.y - self.y * rhs.x,
-        }
-    }
-}
-
-impl Mul for Vec3 {
-    //dot product
-    type Output = f64;
-    fn mul(self, rhs: Self) -> Self::Output {
-        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
-    }
-}
-
-impl Vec3 {
-    /*
-    fn minus(&mut self) {
-        self.x = -self.x;
-        self.y = -self.y;
-        self.z = -self.z;
-    }
-    fn plus_self(&mut self, other: &Vec3) {
-        self.x += other.x;
-        self.y += other.y;
-        self.z += other.z;
-    }
-    fn subtract_self(&mut self, other: &Vec3) {
-        self.x -= other.x;
-        self.y -= other.y;
-        self.z -= other.z;
-    }
-    fn mutiply_self(&mut self, num: f64) {
-        self.x *= num;
-        self.y *= num;
-        self.z *= num;
-    }
-    fn divide_self(&mut self, num: f64) {
-        self.x /= num;
-        self.y /= num;
-        self.z /= num;
-    }
-    fn plus(&self, other: &Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x + other.x,
-            y: self.y + other.y,
-            z: self.z + other.z,
-        }
-    }
-    fn subtract(&self, other: &Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x - other.x,
-            y: self.y - other.y,
-            z: self.z - other.z,
-        }
-    }*/
-    fn multiply(&self, num: f64) -> Vec3 {
-        Vec3 {
-            x: self.x * num,
-            y: self.y * num,
-            z: self.z * num,
-        }
-    }
-    fn divide(&self, num: f64) -> Vec3 {
-        Vec3 {
-            x: self.x / num,
-            y: self.y / num,
-            z: self.z / num,
-        }
-    }
-    fn length(&self) -> f64 {
-        (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
-    }
-}
-
-fn unit_vector(v: Vec3) -> Vec3 {
-    v.divide(v.length())
-}
-
-#[derive(Clone, Copy)]
-struct Ray {
-    orig: Vec3,
-    dir: Vec3,
-}
-
-impl Ray {
-    fn at(&self, t: f64) -> Vec3 {
-        //self.orig.plus(&self.dir.multiply(t))
-        self.orig + self.dir.multiply(t)
-    }
-}
-
-fn hit_sphere(center: Vec3, radius: f64, r: Ray) -> f64 {
-    let oc = r.orig - center;
-    let a = r.dir * r.dir;
-    let b = 2.0 * (oc * r.dir);
-    let c = oc * oc - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
-    if discriminant < 0.0 {
-        -1.0
-    } else {
-        (-b - discriminant.sqrt()) / (2.0 * a)
-    }
-}
+const ZERO_VEC3: Vec3 = Vec3 {
+    x: 0.0,
+    y: 0.0,
+    z: 0.0,
+};
 
 fn ray_color(r: Ray) -> Vec3 {
     let center = Vec3 {
@@ -150,7 +25,25 @@ fn ray_color(r: Ray) -> Vec3 {
         y: 0.0,
         z: -1.0,
     };
-    let t = hit_sphere(center, 0.5, r);
+    let tmp = Sphere {
+        center,
+        radius: 0.5,
+    };
+    let mut hit_record: HitRecord = HitRecord {
+        p: ZERO_VEC3,
+        normal: ZERO_VEC3,
+        t: 0.0,
+        front_face: false,
+    };
+    if tmp.hit(r, 0.0, 114514.0, &mut hit_record) {
+        return Vec3 {
+            x: hit_record.normal.x + 1.0,
+            y: hit_record.normal.y + 1.0,
+            z: hit_record.normal.z + 1.0,
+        } * 0.5;
+    }
+    /*let t = hit_sphere(center, 0.5, r);
+
     if t > 0.0 {
         let n = unit_vector(r.at(t) - center);
         return Vec3 {
@@ -159,21 +52,19 @@ fn ray_color(r: Ray) -> Vec3 {
             z: n.z + 1.0,
         }
         .multiply(0.5);
-    }
+    }*/
     let unit_direction = unit_vector(r.dir);
     let t = 0.5 * (unit_direction.y + 1.0);
     Vec3 {
         x: 1.0,
         y: 1.0,
         z: 1.0,
-    }
-    .multiply(1.0 - t)
+    } * (1.0 - t)
         + Vec3 {
             x: 0.5,
             y: 0.7,
             z: 1.0,
-        }
-        .multiply(t)
+        } * t
 }
 fn main() {
     let path = std::path::Path::new("output/book1/image4.jpg");
@@ -204,8 +95,8 @@ fn main() {
         z: 0.0,
     };
     let lower_left_corner = origin
-        - horizontal.divide(2.0)
-        - vertical.divide(2.0)
+        - horizontal / 2.0
+        - vertical / 2.0
         - Vec3 {
             x: 0.0,
             y: 0.0,
@@ -234,7 +125,7 @@ fn main() {
 
             let r = Ray {
                 orig: origin,
-                dir: lower_left_corner + horizontal.multiply(u) + vertical.multiply(v) - origin,
+                dir: lower_left_corner + horizontal * u + vertical * v - origin,
             };
             let pixel_color = ray_color(r);
 

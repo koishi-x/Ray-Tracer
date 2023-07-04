@@ -50,7 +50,7 @@ impl Mul for Vec3 {
     //dot product
     type Output = f64;
     fn mul(self, rhs: Self) -> Self::Output {
-        self.x * rhs.x + self.y + rhs.y + self.z * rhs.z
+        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 }
 
@@ -114,9 +114,11 @@ impl Vec3 {
     }
 }
 
-fn unit_vector(v: &Vec3) -> Vec3 {
+fn unit_vector(v: Vec3) -> Vec3 {
     v.divide(v.length())
 }
+
+#[derive(Clone, Copy)]
 struct Ray {
     orig: Vec3,
     dir: Vec3,
@@ -131,8 +133,31 @@ impl Ray {
     */
 }
 
-fn ray_color(r: &Ray) -> Vec3 {
-    let unit_direction = unit_vector(&r.dir) + r.orig.multiply(0.0);
+fn hit_sphere(center: Vec3, radius: f64, r: Ray) -> bool {
+    let oc = r.orig - center;
+    let a = r.dir * r.dir;
+    let b = 2.0 * (oc * r.dir);
+    let c = oc * oc - radius * radius;
+    b * b - 4.0 * a * c > 0.0
+}
+
+fn ray_color(r: Ray) -> Vec3 {
+    if hit_sphere(
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: -1.0,
+        },
+        0.5,
+        r,
+    ) {
+        return Vec3 {
+            x: 1.0,
+            y: 0.0,
+            z: 0.0,
+        };
+    }
+    let unit_direction = unit_vector(r.dir);
     let t = 0.5 * (unit_direction.y + 1.0);
     Vec3 {
         x: 1.0,
@@ -148,7 +173,7 @@ fn ray_color(r: &Ray) -> Vec3 {
         .multiply(t)
 }
 fn main() {
-    let path = std::path::Path::new("output/book1/image2.jpg");
+    let path = std::path::Path::new("output/book1/image3.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -208,7 +233,7 @@ fn main() {
                 orig: origin,
                 dir: lower_left_corner + horizontal.multiply(u) + vertical.multiply(v) - origin,
             };
-            let pixel_color = ray_color(&r);
+            let pixel_color = ray_color(r);
 
             *pixel = image::Rgb([
                 (pixel_color.x * 255.999) as u8,

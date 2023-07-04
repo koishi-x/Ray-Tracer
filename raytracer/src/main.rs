@@ -125,37 +125,40 @@ struct Ray {
 }
 
 impl Ray {
-    /*
     fn at(&self, t: f64) -> Vec3 {
         //self.orig.plus(&self.dir.multiply(t))
         self.orig + self.dir.multiply(t)
     }
-    */
 }
 
-fn hit_sphere(center: Vec3, radius: f64, r: Ray) -> bool {
+fn hit_sphere(center: Vec3, radius: f64, r: Ray) -> f64 {
     let oc = r.orig - center;
     let a = r.dir * r.dir;
     let b = 2.0 * (oc * r.dir);
     let c = oc * oc - radius * radius;
-    b * b - 4.0 * a * c > 0.0
+    let discriminant = b * b - 4.0 * a * c;
+    if discriminant < 0.0 {
+        -1.0
+    } else {
+        (-b - discriminant.sqrt()) / (2.0 * a)
+    }
 }
 
 fn ray_color(r: Ray) -> Vec3 {
-    if hit_sphere(
-        Vec3 {
-            x: 0.0,
-            y: 0.0,
-            z: -1.0,
-        },
-        0.5,
-        r,
-    ) {
+    let center = Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: -1.0,
+    };
+    let t = hit_sphere(center, 0.5, r);
+    if t > 0.0 {
+        let n = unit_vector(r.at(t) - center);
         return Vec3 {
-            x: 1.0,
-            y: 0.0,
-            z: 0.0,
-        };
+            x: n.x + 1.0,
+            y: n.y + 1.0,
+            z: n.z + 1.0,
+        }
+        .multiply(0.5);
     }
     let unit_direction = unit_vector(r.dir);
     let t = 0.5 * (unit_direction.y + 1.0);
@@ -173,7 +176,7 @@ fn ray_color(r: Ray) -> Vec3 {
         .multiply(t)
 }
 fn main() {
-    let path = std::path::Path::new("output/book1/image3.jpg");
+    let path = std::path::Path::new("output/book1/image4.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 

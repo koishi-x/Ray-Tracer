@@ -1,4 +1,4 @@
-use crate::{HitRecord, Ray, Vec3};
+use crate::{hittable::*, HitRecord, Ray, Vec3};
 
 #[derive(Clone, Copy)]
 pub struct Sphere {
@@ -7,7 +7,16 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn hit(&self, r: Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+    // pub fn new() -> Self {
+    //     Sphere {
+    //         center: Vec3::new(),
+    //         radius: 0.0,
+    //     }
+    // }
+}
+
+impl Hittable for Sphere {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
         let oc = r.orig - self.center;
         let a = r.dir * r.dir;
         let half_b = oc * r.dir;
@@ -30,7 +39,6 @@ impl Sphere {
         //rec.normal = (rec.p - self.center) / self.radius;
         let outward_normal = (rec.p - self.center) / self.radius;
         rec.set_face_normal(r, outward_normal);
-
         true
     }
 }

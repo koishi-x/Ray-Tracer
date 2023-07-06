@@ -1,5 +1,7 @@
 use std::ops::{Add, AddAssign, BitXor, Div, Mul, Neg, Sub};
 
+use crate::random_double;
+
 #[derive(Clone, Copy)]
 pub struct Vec3 {
     pub x: f64,
@@ -104,62 +106,27 @@ impl Vec3 {
             z: 0.0,
         }
     }
-    /*
-    fn minus(&mut self) {
-        self.x = -self.x;
-        self.y = -self.y;
-        self.z = -self.z;
-    }
-    fn plus_self(&mut self, other: &Vec3) {
-        self.x += other.x;
-        self.y += other.y;
-        self.z += other.z;
-    }
-    fn subtract_self(&mut self, other: &Vec3) {
-        self.x -= other.x;
-        self.y -= other.y;
-        self.z -= other.z;
-    }
-    fn mutiply_self(&mut self, num: f64) {
-        self.x *= num;
-        self.y *= num;
-        self.z *= num;
-    }
-    fn divide_self(&mut self, num: f64) {
-        self.x /= num;
-        self.y /= num;
-        self.z /= num;
-    }
-    fn plus(&self, other: &Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x + other.x,
-            y: self.y + other.y,
-            z: self.z + other.z,
-        }
-    }
-    fn subtract(&self, other: &Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x - other.x,
-            y: self.y - other.y,
-            z: self.z - other.z,
-        }
-    }
-    pub fn multiply(&self, num: f64) -> Vec3 {
-        Vec3 {
-            x: self.x * num,
-            y: self.y * num,
-            z: self.z * num,
-        }
-    }
-    pub fn divide(&self, num: f64) -> Vec3 {
-        Vec3 {
-            x: self.x / num,
-            y: self.y / num,
-            z: self.z / num,
-        }
-    }*/
+
     pub fn length(&self) -> f64 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
+    }
+}
+
+pub fn random(min: f64, max: f64) -> Vec3 {
+    Vec3 {
+        x: random_double(min, max),
+        y: random_double(min, max),
+        z: random_double(min, max),
+    }
+}
+
+pub fn random_in_unit_sphere() -> Vec3 {
+    loop {
+        let p = random(-1.0, 1.0);
+        if p.length() >= 1.0 {
+            continue;
+        }
+        return p;
     }
 }
 

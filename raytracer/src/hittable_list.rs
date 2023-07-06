@@ -1,4 +1,5 @@
-pub use std::sync::Arc;
+pub use std::rc::Rc;
+//pub use std::sync::Rc;
 pub use std::vec::Vec;
 
 pub mod hittable;
@@ -7,7 +8,7 @@ use crate::ray::*;
 
 pub use hittable::*;
 pub struct HittableList {
-    objects: Vec<Arc<dyn Hittable>>,
+    objects: Vec<Rc<dyn Hittable>>,
 }
 
 impl HittableList {
@@ -17,7 +18,7 @@ impl HittableList {
         }
     }
 
-    pub fn add(&mut self, object: Arc<dyn Hittable>) {
+    pub fn add(&mut self, object: Rc<dyn Hittable>) {
         self.objects.push(object);
     }
 

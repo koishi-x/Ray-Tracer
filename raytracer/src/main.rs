@@ -1,54 +1,69 @@
 mod camera;
 mod color;
 mod hittable_list;
+mod material;
 mod sphere;
 
 use camera::*;
 use color::*;
 use hittable_list::*;
+use material::*;
 use raytracer::*;
 use sphere::*;
 
-fn ray_color(r: &Ray, world: &impl Hittable, depth: i32) -> Vec3 {
+fn ray_color(r: Ray, world: &impl Hittable, depth: i32) -> Vec3 {
     if depth <= 0 {
         return Vec3::new();
     }
 
-    let mut rec = HitRecord::new();
-    if world.hit(r, 0.001, INFINITY, &mut rec) {
-        let target = rec.p + rec.normal + random_unit_vector();
-        return ray_color(
-            &Ray {
-                orig: rec.p,
-                dir: target - rec.p,
-            },
-            world,
-            depth - 1,
-        ) * 0.5;
-        // return (rec.normal
-        //     + Vec3 {
-        //         x: 1.0,
-        //         y: 1.0,
-        //         z: 1.0,
-        //     })
-        //     * 0.5;
+    match world.hit(r, 0.001, INFINITY) {
+        Some(rec) => match rec.mat_ptr.scatter(r, &rec) {
+            None => Vec3::new(),
+            Some((attenuation, scattered)) => attenuation * ray_color(scattered, world, depth - 1),
+        },
+        None => {
+            let unit_direction = unit_vector(r.dir);
+            let t = 0.5 * (unit_direction.y + 1.0);
+            Vec3 {
+                x: 1.0,
+                y: 1.0,
+                z: 1.0,
+            } * (1.0 - t)
+                + Vec3 {
+                    x: 0.5,
+                    y: 0.7,
+                    z: 1.0,
+                } * t
+        }
     }
-    let unit_direction = unit_vector(r.dir);
-    let t = 0.5 * (unit_direction.y + 1.0);
-    Vec3 {
-        x: 1.0,
-        y: 1.0,
-        z: 1.0,
-    } * (1.0 - t)
-        + Vec3 {
-            x: 0.5,
-            y: 0.7,
-            z: 1.0,
-        } * t
+    // let mut rec = HitRecord::new();
+    // if world.hit(r, 0.001, INFINITY, &mut rec) {
+    //     let target = rec.p + random_in_hemisphere(rec.normal);
+    //     return ray_color(
+    //         &Ray {
+    //             orig: rec.p,
+    //             dir: target - rec.p,
+    //         },
+    //         world,
+    //         depth - 1,
+    //     ) * 0.5;
+    // }
+    // let unit_direction = unit_vector(r.dir);
+    // let t = 0.5 * (unit_direction.y + 1.0);
+    // Vec3 {
+    //     x: 1.0,
+    //     y: 1.0,
+    //     z: 1.0,
+    // } * (1.0 - t)
+    //     + Vec3 {
+    //         x: 0.5,
+    //         y: 0.7,
+    //         z: 1.0,
+    //     } * t
 }
 fn main() {
     //path
-    let path = std::path::Path::new("output/book1/image9.jpg");
+    let path = std::path::Path::new("output/book1/image11.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -61,21 +76,71 @@ fn main() {
 
     //World
     let mut world = HittableList::new();
-    world.add(Rc::new(Sphere {
-        center: Vec3 {
-            x: 0.0,
-            y: 0.0,
-            z: -1.0,
-        },
-        radius: 0.5,
+
+    // let material_ground = Arc::new(Lambertian {
+    //     albedo: Vec3 {
+    //         x: 0.8,
+    //         y: 0.8,
+    //         z: 0.0,
+    //     },
+    // });
+    let material_ground = Arc::new(Lambertian::new(Vec3 {
+        x: 0.8,
+        y: 0.8,
+        z: 0.0,
     }));
-    world.add(Rc::new(Sphere {
+
+    let material_center = Arc::new(Lambertian::new(Vec3 {
+        x: 0.7,
+        y: 0.3,
+        z: 0.3,
+    }));
+    let material_left = Arc::new(Metal::new(Vec3 {
+        x: 0.8,
+        y: 0.8,
+        z: 0.8,
+    }));
+    let material_right = Arc::new(Metal::new(Vec3 {
+        x: 0.8,
+        y: 0.6,
+        z: 0.2,
+    }));
+
+    world.add(Arc::new(Sphere {
         center: Vec3 {
             x: 0.0,
             y: -100.5,
             z: -1.0,
         },
         radius: 100.0,
+        mat_ptr: material_ground,
+    }));
+    world.add(Arc::new(Sphere {
+        center: Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: -1.0,
+        },
+        radius: 0.5,
+        mat_ptr: material_center,
+    }));
+    world.add(Arc::new(Sphere {
+        center: Vec3 {
+            x: -1.0,
+            y: 0.0,
+            z: -1.0,
+        },
+        radius: 0.5,
+        mat_ptr: material_left,
+    }));
+    world.add(Arc::new(Sphere {
+        center: Vec3 {
+            x: 1.0,
+            y: 0.0,
+            z: -1.0,
+        },
+        radius: 0.5,
+        mat_ptr: material_right,
     }));
 
     //Camera
@@ -100,7 +165,7 @@ fn main() {
                 let u = (i as f64 + random_double_default()) / ((image_width - 1) as f64);
                 let v = (j as f64 + random_double_default()) / ((image_height - 1) as f64);
                 let r = cam.get_ray(u, v);
-                pixel_color += ray_color(&r, &world, max_depth);
+                pixel_color += ray_color(r, &world, max_depth);
             }
             *pixel = image::Rgb(write_color(pixel_color, samples_per_pixel));
             //let r: f64 = (i as f64) / ((width - 1) as f64) * 255.999;

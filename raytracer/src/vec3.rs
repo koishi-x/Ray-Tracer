@@ -51,11 +51,23 @@ impl BitXor for Vec3 {
     }
 }
 
+// impl Mul for Vec3 {
+//     //dot product
+//     type Output = f64;
+//     fn mul(self, rhs: Self) -> Self::Output {
+//         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+//     }
+// }
+
 impl Mul for Vec3 {
-    //dot product
-    type Output = f64;
+    type Output = Vec3;
     fn mul(self, rhs: Self) -> Self::Output {
-        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+        //self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+        Vec3 {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y,
+            z: self.z * rhs.z,
+        }
     }
 }
 
@@ -110,6 +122,15 @@ impl Vec3 {
     pub fn length(&self) -> f64 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
+
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        self.x.abs() < s && self.y.abs() < s && self.z.abs() < s
+    }
+}
+
+pub fn dot(u: Vec3, v: Vec3) -> f64 {
+    u.x * v.x + u.y * v.y + u.z * v.z
 }
 
 pub fn random(min: f64, max: f64) -> Vec3 {
@@ -130,10 +151,23 @@ pub fn random_in_unit_sphere() -> Vec3 {
     }
 }
 
+pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+    let in_unit_sphere = random_in_unit_sphere();
+    if dot(in_unit_sphere, normal) > 0.0 {
+        in_unit_sphere
+    } else {
+        -in_unit_sphere
+    }
+}
+
 pub fn random_unit_vector() -> Vec3 {
     unit_vector(random_in_unit_sphere())
 }
 
 pub fn unit_vector(v: Vec3) -> Vec3 {
     v / v.length()
+}
+
+pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+    v - n * dot(n, v) * 2.0
 }

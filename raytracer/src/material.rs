@@ -1,3 +1,5 @@
+use raytracer::clamp;
+
 //use hittable_list::*;
 use crate::{vec3::*, HitRecord, Ray};
 pub trait Material {
@@ -31,11 +33,15 @@ impl Material for Lambertian {
 
 pub struct Metal {
     pub albedo: Vec3,
+    pub fuzz: f64,
 }
 
 impl Metal {
-    pub fn new(a: Vec3) -> Metal {
-        Metal { albedo: a }
+    pub fn new(a: Vec3, f: f64) -> Metal {
+        Metal {
+            albedo: a,
+            fuzz: clamp(f, 0.0, 1.0),
+        }
     }
 }
 
@@ -44,7 +50,7 @@ impl Material for Metal {
         let reflected = reflect(unit_vector(r_in.dir), rec.normal);
         let scattered = Ray {
             orig: rec.p,
-            dir: reflected,
+            dir: reflected + random_in_unit_sphere() * self.fuzz,
         };
         let attenuation = self.albedo;
         Some((attenuation, scattered))

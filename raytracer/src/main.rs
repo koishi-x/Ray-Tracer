@@ -16,7 +16,7 @@ fn ray_color(r: &Ray, world: &impl Hittable, depth: i32) -> Vec3 {
 
     let mut rec = HitRecord::new();
     if world.hit(r, 0.001, INFINITY, &mut rec) {
-        let target = rec.p + rec.normal + random_in_unit_sphere();
+        let target = rec.p + rec.normal + random_unit_vector();
         return ray_color(
             &Ray {
                 orig: rec.p,
@@ -48,7 +48,7 @@ fn ray_color(r: &Ray, world: &impl Hittable, depth: i32) -> Vec3 {
 }
 fn main() {
     //path
-    let path = std::path::Path::new("output/book1/image8.jpg");
+    let path = std::path::Path::new("output/book1/image9.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 

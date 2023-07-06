@@ -1,7 +1,11 @@
-use crate::{hittable::*, ray::*};
-use std::sync::Arc;
-use std::vec::Vec;
+pub use std::sync::Arc;
+pub use std::vec::Vec;
 
+pub mod hittable;
+
+use crate::ray::*;
+
+pub use hittable::*;
 pub struct HittableList {
     objects: Vec<Arc<dyn Hittable>>,
 }

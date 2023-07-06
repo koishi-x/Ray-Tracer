@@ -1,4 +1,4 @@
-use crate::{hittable::*, HitRecord, Ray, Vec3};
+use crate::{hittable_list::*, Ray, Vec3};
 
 #[derive(Clone, Copy)]
 pub struct Sphere {

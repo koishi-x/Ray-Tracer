@@ -1,9 +1,9 @@
-use crate::Vec3;
+use crate::vec3;
 
 #[derive(Clone, Copy)]
 pub struct Ray {
-    pub orig: Vec3,
-    pub dir: Vec3,
+    pub orig: vec3::Vec3,
+    pub dir: vec3::Vec3,
 }
 
 impl Ray {
@@ -14,7 +14,7 @@ impl Ray {
     //     }
     // }
 
-    pub fn at(&self, t: f64) -> Vec3 {
+    pub fn at(&self, t: f64) -> vec3::Vec3 {
         //self.orig.plus(&self.dir.multiply(t))
         self.orig + self.dir * t
     }

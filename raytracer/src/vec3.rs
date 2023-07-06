@@ -1,4 +1,4 @@
-use std::ops::{Add, BitXor, Div, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, BitXor, Div, Mul, Neg, Sub};
 
 #[derive(Clone, Copy)]
 pub struct Vec3 {
@@ -18,6 +18,14 @@ impl Add for Vec3 {
     }
 }
 
+impl AddAssign for Vec3 {
+    //type Output = ();
+    fn add_assign(&mut self, rhs: Self) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+        self.z += rhs.z;
+    }
+}
 impl Sub for Vec3 {
     type Output = Vec3;
     fn sub(self, rhs: Self) -> Self::Output {
@@ -79,6 +87,12 @@ impl Neg for Vec3 {
             y: -self.y,
             z: -self.z,
         }
+    }
+}
+
+impl Default for Vec3 {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

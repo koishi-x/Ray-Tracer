@@ -1,21 +1,14 @@
-mod hittable;
+mod camera;
+mod color;
 mod hittable_list;
-mod ray;
 mod sphere;
-mod vec3;
 
-use console::style;
-//use image::flat::View;
-use hittable::*;
+use camera::*;
+use color::*;
 use hittable_list::*;
-use image::{ImageBuffer, RgbImage};
-use indicatif::ProgressBar;
-use ray::*;
+use raytracer::*;
 use sphere::*;
-use std::f64::INFINITY;
-use std::sync::Arc;
-use std::{fs::File, process::exit};
-use vec3::*;
+//use std::sync::Arc;
 
 fn ray_color(r: &Ray, world: &impl Hittable) -> Vec3 {
     let mut rec = HitRecord::new();
@@ -75,7 +68,7 @@ fn ray_color(r: &Ray, world: &impl Hittable) -> Vec3 {
 }
 fn main() {
     //path
-    let path = std::path::Path::new("output/book1/image5.jpg");
+    let path = std::path::Path::new("output/book1/image6.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -83,6 +76,7 @@ fn main() {
     let aspect_ratio: f64 = 16.0 / 9.0;
     let image_width: u32 = 400;
     let image_height: u32 = (image_width as f64 / aspect_ratio) as u32;
+    let samples_per_pixel: u32 = 100;
 
     //World
     let mut world = HittableList::new();
@@ -104,33 +98,34 @@ fn main() {
     }));
 
     //Camera
-    let viewport_height = 2.0;
-    let viewport_width = aspect_ratio * viewport_height;
-    let focal_length = 1.0;
+    let cam = Camera::new();
+    // let viewport_height = 2.0;
+    // let viewport_width = aspect_ratio * viewport_height;
+    // let focal_length = 1.0;
 
-    let origin = Vec3 {
-        x: 0.0,
-        y: 0.0,
-        z: 0.0,
-    };
-    let horizontal = Vec3 {
-        x: viewport_width,
-        y: 0.0,
-        z: 0.0,
-    };
-    let vertical = Vec3 {
-        x: 0.0,
-        y: viewport_height,
-        z: 0.0,
-    };
-    let lower_left_corner = origin
-        - horizontal / 2.0
-        - vertical / 2.0
-        - Vec3 {
-            x: 0.0,
-            y: 0.0,
-            z: focal_length,
-        };
+    // let origin = Vec3 {
+    //     x: 0.0,
+    //     y: 0.0,
+    //     z: 0.0,
+    // };
+    // let horizontal = Vec3 {
+    //     x: viewport_width,
+    //     y: 0.0,
+    //     z: 0.0,
+    // };
+    // let vertical = Vec3 {
+    //     x: 0.0,
+    //     y: viewport_height,
+    //     z: 0.0,
+    // };
+    // let lower_left_corner = origin
+    //     - horizontal / 2.0
+    //     - vertical / 2.0
+    //     - Vec3 {
+    //         x: 0.0,
+    //         y: 0.0,
+    //         z: focal_length,
+    //     };
 
     let quality = 100;
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
@@ -145,25 +140,28 @@ fn main() {
     for j in (0..image_height).rev() {
         for i in 0..image_width {
             let pixel = img.get_pixel_mut(i, j);
-
+            let mut pixel_color = Vec3::new();
+            for _s in 0..samples_per_pixel {
+                let u = (i as f64 + random_double_default()) / ((image_width - 1) as f64);
+                let v = (j as f64 + random_double_default()) / ((image_height - 1) as f64);
+                let r = cam.get_ray(u, v);
+                pixel_color += ray_color(&r, &world);
+            }
+            *pixel = image::Rgb(write_color(pixel_color, samples_per_pixel));
             //let r: f64 = (i as f64) / ((width - 1) as f64) * 255.999;
             //let g: f64 = (j as f64) / ((height - 1) as f64) * 255.999;
             //let b: f64 = 0.25 * 255.999;
 
-            let u = (i as f64) / ((image_width - 1) as f64);
-            let v = (j as f64) / ((image_height - 1) as f64);
+            // let u = (i as f64) / ((image_width - 1) as f64);
+            // let v = (j as f64) / ((image_height - 1) as f64);
 
-            let r = Ray {
-                orig: origin,
-                dir: lower_left_corner + horizontal * u + vertical * v - origin,
-            };
-            let pixel_color = ray_color(&r, &world);
+            // let r = Ray {
+            //     orig: origin,
+            //     dir: lower_left_corner + horizontal * u + vertical * v - origin,
+            // };
+            // let pixel_color = ray_color(&r, &world);
 
-            *pixel = image::Rgb([
-                (pixel_color.x * 255.999) as u8,
-                (pixel_color.y * 255.999) as u8,
-                (pixel_color.z * 255.999) as u8,
-            ]);
+            // *pixel = image::Rgb(write_color(pixel_color));
         }
         progress.inc(1);
     }

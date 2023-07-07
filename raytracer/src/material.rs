@@ -82,12 +82,33 @@ impl Material for Dielectric {
         };
 
         let unit_direction = unit_vector(r_in.dir);
-        let refracted = refract(unit_direction, rec.normal, refraction_ratio);
+        let cos_theta = dot(-unit_direction, rec.normal).min(1.0);
+        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
-        let scattered = Ray {
-            orig: rec.p,
-            dir: refracted,
-        };
-        Some((attenuation, scattered))
+        if refraction_ratio * sin_theta > 1.0 {
+            Some((
+                attenuation,
+                Ray {
+                    orig: rec.p,
+                    dir: reflect(unit_direction, rec.normal),
+                },
+            ))
+        } else {
+            Some((
+                attenuation,
+                Ray {
+                    orig: rec.p,
+                    dir: refract(unit_direction, rec.normal, refraction_ratio),
+                },
+            ))
+        }
+
+        // let refracted = refract(unit_direction, rec.normal, refraction_ratio);
+
+        // let scattered = Ray {
+        //     orig: rec.p,
+        //     dir: refracted,
+        // };
+        // Some((attenuation, scattered))
     }
 }

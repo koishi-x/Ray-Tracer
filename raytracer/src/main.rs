@@ -40,7 +40,7 @@ fn ray_color(r: Ray, world: &impl Hittable, depth: i32) -> Vec3 {
 
 fn main() {
     //path
-    let path = std::path::Path::new("output/book1/image14.jpg");
+    let path = std::path::Path::new("output/book1/image15.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -60,14 +60,14 @@ fn main() {
         z: 0.0,
     }));
 
-    let material_center = Arc::new(Dielectric::new(1.5));
+    //let material_center = Arc::new(Dielectric::new(1.5));
     let material_left = Arc::new(Dielectric::new(1.5));
 
-    // let material_center = Arc::new(Lambertian::new(Vec3 {
-    //     x: 0.7,
-    //     y: 0.3,
-    //     z: 0.3,
-    // }));
+    let material_center = Arc::new(Lambertian::new(Vec3 {
+        x: 0.1,
+        y: 0.2,
+        z: 0.5,
+    }));
     // let material_left = Arc::new(Metal::new(
     //     Vec3 {
     //         x: 0.8,

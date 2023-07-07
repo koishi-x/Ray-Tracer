@@ -40,7 +40,7 @@ fn ray_color(r: Ray, world: &impl Hittable, depth: i32) -> Vec3 {
 
 fn main() {
     //path
-    let path = std::path::Path::new("output/book1/image19.jpg");
+    let path = std::path::Path::new("output/book1/image20.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -122,24 +122,31 @@ fn main() {
     }));
 
     //Camera
+
+    let lookfrom = Vec3 {
+        x: 3.0,
+        y: 3.0,
+        z: 2.0,
+    };
+    let lookat = Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: -1.0,
+    };
+    let vup = Vec3 {
+        x: 0.0,
+        y: 1.0,
+        z: 0.0,
+    };
+
     let cam = Camera::new(
-        Vec3 {
-            x: -2.0,
-            y: 2.0,
-            z: 1.0,
-        },
-        Vec3 {
-            x: 0.0,
-            y: 0.0,
-            z: -1.0,
-        },
-        Vec3 {
-            x: 0.0,
-            y: 1.0,
-            z: 0.0,
-        },
+        lookfrom,
+        lookat,
+        vup,
         20.0,
         aspect_ratio,
+        2.0,
+        (lookfrom - lookat).length(),
     );
 
     let quality = 100;

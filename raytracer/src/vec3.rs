@@ -164,6 +164,20 @@ pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
     }
 }
 
+pub fn random_in_unit_disk() -> Vec3 {
+    loop {
+        let p = Vec3 {
+            x: random_double(-1.0, 1.0),
+            y: random_double(-1.0, 1.0),
+            z: 0.0,
+        };
+        if p.length() >= 1.0 {
+            continue;
+        }
+        return p;
+    }
+}
+
 pub fn random_unit_vector() -> Vec3 {
     unit_vector(random_in_unit_sphere())
 }

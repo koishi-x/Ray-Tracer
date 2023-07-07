@@ -1,4 +1,4 @@
-use raytracer::clamp;
+use raytracer::{clamp, random_double_default};
 
 //use hittable_list::*;
 use crate::{vec3::*, HitRecord, Ray};
@@ -67,6 +67,10 @@ impl Dielectric {
             ir: index_of_refraction,
         }
     }
+    fn reflectance(&self, cosine: f64, ref_idx: f64) -> f64 {
+        let r0 = ((1.0 - ref_idx) / (1.0 + ref_idx)).powi(2);
+        r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
+    }
 }
 
 impl Material for Dielectric {
@@ -85,7 +89,9 @@ impl Material for Dielectric {
         let cos_theta = dot(-unit_direction, rec.normal).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
 
-        if refraction_ratio * sin_theta > 1.0 {
+        if refraction_ratio * sin_theta > 1.0
+            || self.reflectance(cos_theta, refraction_ratio) > random_double_default()
+        {
             Some((
                 attenuation,
                 Ray {

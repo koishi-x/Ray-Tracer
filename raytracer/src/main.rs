@@ -40,7 +40,7 @@ fn ray_color(r: Ray, world: &impl Hittable, depth: i32) -> Vec3 {
 
 fn main() {
     //path
-    let path = std::path::Path::new("output/book1/image15.jpg");
+    let path = std::path::Path::new("output/book1/image16.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -110,6 +110,15 @@ fn main() {
             z: -1.0,
         },
         radius: 0.5,
+        mat_ptr: material_left.clone(),
+    }));
+    world.add(Arc::new(Sphere {
+        center: Vec3 {
+            x: -1.0,
+            y: 0.0,
+            z: -1.0,
+        },
+        radius: -0.4,
         mat_ptr: material_left,
     }));
     world.add(Arc::new(Sphere {

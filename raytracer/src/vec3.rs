@@ -155,14 +155,14 @@ pub fn random_in_unit_sphere() -> Vec3 {
     }
 }
 
-pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
-    let in_unit_sphere = random_in_unit_sphere();
-    if dot(in_unit_sphere, normal) > 0.0 {
-        in_unit_sphere
-    } else {
-        -in_unit_sphere
-    }
-}
+// pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+//     let in_unit_sphere = random_in_unit_sphere();
+//     if dot(in_unit_sphere, normal) > 0.0 {
+//         in_unit_sphere
+//     } else {
+//         -in_unit_sphere
+//     }
+// }
 
 pub fn random_in_unit_disk() -> Vec3 {
     loop {
@@ -179,7 +179,15 @@ pub fn random_in_unit_disk() -> Vec3 {
 }
 
 pub fn random_unit_vector() -> Vec3 {
-    unit_vector(random_in_unit_sphere())
+    //unit_vector(random_in_unit_sphere())
+    let a = random_double(0.0, 2.0 * crate::PI);
+    let z = random_double(-1.0, 1.0);
+    let r = (1.0 - z * z).sqrt();
+    Vec3 {
+        x: r * a.cos(),
+        y: r * a.sin(),
+        z,
+    }
 }
 
 pub fn unit_vector(v: Vec3) -> Vec3 {

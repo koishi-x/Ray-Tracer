@@ -1,9 +1,9 @@
-use raytracer::random_double_default;
+use crate::random_double_default;
 
 //use hittable_list::*;
 use crate::{clamp, vec3::*, HitRecord, Ray};
 pub trait Material {
-    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Vec3, Ray)>;
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)>;
 }
 
 pub struct Lambertian {
@@ -17,7 +17,7 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, _r_in: Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, _r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
         let mut scatter_direction = rec.normal + random_unit_vector();
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
@@ -46,14 +46,18 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
         let reflected = reflect(unit_vector(r_in.dir), rec.normal);
         let scattered = Ray {
             orig: rec.p,
             dir: reflected + random_in_unit_sphere() * self.fuzz,
         };
         let attenuation = self.albedo;
-        Some((attenuation, scattered))
+        if dot(scattered.dir, rec.normal) > 0.0 {
+            Some((attenuation, scattered))
+        } else {
+            None
+        }
     }
 }
 
@@ -68,13 +72,14 @@ impl Dielectric {
         }
     }
     fn reflectance(&self, cosine: f64, ref_idx: f64) -> f64 {
-        let r0 = ((1.0 - ref_idx) / (1.0 + ref_idx)).powi(2);
-        r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
+        let mut r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
+        r0 *= r0;
+        r0 + (1.0 - r0) * (1.0 - cosine).powf(5.0)
     }
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
         let attenuation = Vec3 {
             x: 1.0,
             y: 1.0,

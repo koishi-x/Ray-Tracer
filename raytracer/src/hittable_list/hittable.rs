@@ -1,17 +1,17 @@
 //use crate::{Ray, Vec3};
 use crate::{material::*, ray::*, vec3::*};
 
-pub use std::sync::Arc;
+//pub use std::sync::Arc;
+pub use std::rc::Rc;
 pub trait Hittable {
-    //fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool;
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
 
 #[derive(Clone)]
 pub struct HitRecord {
     pub p: Vec3,
     pub normal: Vec3,
-    pub mat_ptr: Arc<dyn Material>,
+    pub mat_ptr: Rc<dyn Material>,
     pub t: f64,
     pub front_face: bool,
 }
@@ -25,12 +25,22 @@ impl HitRecord {
     //         front_face: false,
     //     }
     // }
-    pub fn set_face_normal(&mut self, r: Ray, outward_normal: Vec3) {
-        self.front_face = dot(r.dir, outward_normal) < 0.0;
-        if self.front_face {
-            self.normal = outward_normal;
-        } else {
-            self.normal = -outward_normal;
+    pub fn new(t: f64, p: Vec3, mat_ptr: &Rc<dyn Material>) -> HitRecord {
+        HitRecord {
+            p,
+            normal: Vec3::new(),
+            mat_ptr: mat_ptr.clone(),
+            t,
+            front_face: false,
         }
+    }
+
+    pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
+        self.front_face = dot(r.dir, outward_normal) < 0.0;
+        self.normal = if self.front_face {
+            outward_normal
+        } else {
+            -outward_normal
+        };
     }
 }

@@ -1,4 +1,4 @@
-use raytracer::{clamp, random_double_default};
+use raytracer::random_double_default;
 
 //use hittable_list::*;
 use crate::{vec3::*, HitRecord, Ray};
@@ -37,12 +37,12 @@ pub struct Metal {
 }
 
 impl Metal {
-    pub fn new(a: Vec3, f: f64) -> Metal {
-        Metal {
-            albedo: a,
-            fuzz: clamp(f, 0.0, 1.0),
-        }
-    }
+    // pub fn new(a: Vec3, f: f64) -> Metal {
+    //     Metal {
+    //         albedo: a,
+    //         fuzz: clamp(f, 0.0, 1.0),
+    //     }
+    // }
 }
 
 impl Material for Metal {
@@ -62,11 +62,11 @@ pub struct Dielectric {
 }
 
 impl Dielectric {
-    pub fn new(index_of_refraction: f64) -> Dielectric {
-        Dielectric {
-            ir: index_of_refraction,
-        }
-    }
+    // pub fn new(index_of_refraction: f64) -> Dielectric {
+    //     Dielectric {
+    //         ir: index_of_refraction,
+    //     }
+    // }
     fn reflectance(&self, cosine: f64, ref_idx: f64) -> f64 {
         let r0 = ((1.0 - ref_idx) / (1.0 + ref_idx)).powi(2);
         r0 + (1.0 - r0) * (1.0 - cosine).powi(5)

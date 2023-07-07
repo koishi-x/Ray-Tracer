@@ -40,7 +40,7 @@ fn ray_color(r: Ray, world: &impl Hittable, depth: i32) -> Vec3 {
 
 fn main() {
     //path
-    let path = std::path::Path::new("output/book1/image16.jpg");
+    let path = std::path::Path::new("output/book1/image17.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -52,87 +52,105 @@ fn main() {
     let max_depth = 50;
 
     //World
-    let mut world = HittableList::new();
 
-    let material_ground = Arc::new(Lambertian::new(Vec3 {
-        x: 0.8,
-        y: 0.8,
+    let mut world = HittableList::new();
+    let r = (PI / 4.0).cos();
+    let material_left = Arc::new(Lambertian::new(Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    }));
+    let material_right = Arc::new(Lambertian::new(Vec3 {
+        x: 1.0,
+        y: 0.0,
         z: 0.0,
     }));
-
-    //let material_center = Arc::new(Dielectric::new(1.5));
-    let material_left = Arc::new(Dielectric::new(1.5));
-
-    let material_center = Arc::new(Lambertian::new(Vec3 {
-        x: 0.1,
-        y: 0.2,
-        z: 0.5,
-    }));
-    // let material_left = Arc::new(Metal::new(
-    //     Vec3 {
-    //         x: 0.8,
-    //         y: 0.8,
-    //         z: 0.8,
-    //     },
-    //     0.3,
-    // ));
-    let material_right = Arc::new(Metal::new(
-        Vec3 {
-            x: 0.8,
-            y: 0.6,
-            z: 0.2,
-        },
-        1.0,
-    ));
-
     world.add(Arc::new(Sphere {
         center: Vec3 {
-            x: 0.0,
-            y: -100.5,
-            z: -1.0,
-        },
-        radius: 100.0,
-        mat_ptr: material_ground,
-    }));
-    world.add(Arc::new(Sphere {
-        center: Vec3 {
-            x: 0.0,
+            x: -r,
             y: 0.0,
             z: -1.0,
         },
-        radius: 0.5,
-        mat_ptr: material_center,
-    }));
-    world.add(Arc::new(Sphere {
-        center: Vec3 {
-            x: -1.0,
-            y: 0.0,
-            z: -1.0,
-        },
-        radius: 0.5,
-        mat_ptr: material_left.clone(),
-    }));
-    world.add(Arc::new(Sphere {
-        center: Vec3 {
-            x: -1.0,
-            y: 0.0,
-            z: -1.0,
-        },
-        radius: -0.4,
+        radius: r,
         mat_ptr: material_left,
     }));
     world.add(Arc::new(Sphere {
         center: Vec3 {
-            x: 1.0,
+            x: r,
             y: 0.0,
             z: -1.0,
         },
-        radius: 0.5,
+        radius: r,
         mat_ptr: material_right,
     }));
+    // let material_ground = Arc::new(Lambertian::new(Vec3 {
+    //     x: 0.8,
+    //     y: 0.8,
+    //     z: 0.0,
+    // }));
+    // let material_left = Arc::new(Dielectric::new(1.5));
+    // let material_center = Arc::new(Lambertian::new(Vec3 {
+    //     x: 0.1,
+    //     y: 0.2,
+    //     z: 0.5,
+    // }));
+    // let material_right = Arc::new(Metal::new(
+    //     Vec3 {
+    //         x: 0.8,
+    //         y: 0.6,
+    //         z: 0.2,
+    //     },
+    //     1.0,
+    // ));
+
+    // world.add(Arc::new(Sphere {
+    //     center: Vec3 {
+    //         x: 0.0,
+    //         y: -100.5,
+    //         z: -1.0,
+    //     },
+    //     radius: 100.0,
+    //     mat_ptr: material_ground,
+    // }));
+    // world.add(Arc::new(Sphere {
+    //     center: Vec3 {
+    //         x: 0.0,
+    //         y: 0.0,
+    //         z: -1.0,
+    //     },
+    //     radius: 0.5,
+    //     mat_ptr: material_center,
+    // }));
+    // world.add(Arc::new(Sphere {
+    //     center: Vec3 {
+    //         x: -1.0,
+    //         y: 0.0,
+    //         z: -1.0,
+    //     },
+    //     radius: 0.5,
+    //     mat_ptr: material_left.clone(),
+    // }));
+    // world.add(Arc::new(Sphere {
+    //     center: Vec3 {
+    //         x: -1.0,
+    //         y: 0.0,
+    //         z: -1.0,
+    //     },
+    //     radius: -0.4,
+    //     mat_ptr: material_left,
+    // }));
+    // world.add(Arc::new(Sphere {
+    //     center: Vec3 {
+    //         x: 1.0,
+    //         y: 0.0,
+    //         z: -1.0,
+    //     },
+    //     radius: 0.5,
+    //     mat_ptr: material_right,
+    // }));
 
     //Camera
-    let cam = Camera::new();
+    let cam = Camera::new(90.0, aspect_ratio);
 
     let quality = 100;
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);

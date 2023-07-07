@@ -1,3 +1,4 @@
+use crate::rtweekend::random_double;
 use crate::{random_in_unit_disk, unit_vector};
 
 use crate::{degrees_to_radians, Ray, Vec3};
@@ -49,15 +50,14 @@ impl Camera {
             lens_radius,
         }
     }
-    pub fn get_ray(&self, u: f64, v: f64) -> Ray {
+    pub fn get_ray(&self, u: f64, v: f64, time0: f64, time1: f64) -> Ray {
         let rd = random_in_unit_disk() * self.lens_radius;
         let offset = self.u * rd.x + self.v * rd.y;
 
-        Ray {
-            orig: self.origin + offset,
-            dir: self.lower_left_corner + self.horizontal * u + self.vertical * v
-                - self.origin
-                - offset,
-        }
+        Ray::new_tm(
+            self.origin + offset,
+            self.lower_left_corner + self.horizontal * u + self.vertical * v - self.origin - offset,
+            random_double(time0, time1),
+        )
     }
 }

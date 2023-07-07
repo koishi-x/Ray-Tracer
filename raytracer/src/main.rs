@@ -2,6 +2,7 @@ mod camera;
 mod color;
 mod hittable_list;
 mod material;
+mod moving_sphere;
 mod ray;
 mod rtweekend;
 mod sphere;
@@ -11,6 +12,7 @@ use camera::*;
 use color::*;
 use hittable_list::*;
 use material::*;
+use moving_sphere::*;
 use ray::*;
 use rtweekend::*;
 use sphere::*;
@@ -84,11 +86,25 @@ fn random_scene() -> HittableList {
                     //diffuse
                     let albedo = random(0.0, 1.0) * random(0.0, 1.0);
                     let sphere_material = Rc::new(Lambertian::new(albedo));
-                    world.add(Rc::new(Sphere {
-                        center,
+                    let center2 = center
+                        + Vec3 {
+                            x: 0.,
+                            y: random_double(0., 0.5),
+                            z: 0.,
+                        };
+                    world.add(Rc::new(MovingSphere {
+                        center0: center,
+                        center1: center2,
+                        time0: 0.0,
+                        time1: 1.0,
                         radius: 0.2,
                         mat_ptr: sphere_material,
                     }));
+                    // world.add(Rc::new(Sphere {
+                    //     center,
+                    //     radius: 0.2,
+                    //     mat_ptr: sphere_material,
+                    // }));
                 } else if choose_mat < 0.95 {
                     //metal
                     let aldebo = random(0.5, 1.0);
@@ -161,15 +177,15 @@ fn random_scene() -> HittableList {
 
 fn main() {
     //path
-    let path = std::path::Path::new("output/book1/image21.jpg");
+    let path = std::path::Path::new("output/book2/image1.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
     //Image
-    let aspect_ratio: f64 = 3.0 / 2.0;
-    let image_width: u32 = 1200;
+    let aspect_ratio: f64 = 16.0 / 9.0;
+    let image_width: u32 = 400;
     let image_height: u32 = (image_width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel: u32 = 500;
+    let samples_per_pixel: u32 = 100;
     let max_depth = 50;
 
     //World
@@ -223,7 +239,7 @@ fn main() {
             for _s in 0..samples_per_pixel {
                 let u = (i as f64 + random_double_default()) / ((image_width - 1) as f64);
                 let v = (j as f64 + random_double_default()) / ((image_height - 1) as f64);
-                let r = cam.get_ray(u, v);
+                let r = cam.get_ray(u, v, 0.0, 1.0);
                 pixel_color += ray_color(&r, &world, max_depth);
             }
             *pixel = image::Rgb(write_color(pixel_color, samples_per_pixel));

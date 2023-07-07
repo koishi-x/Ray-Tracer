@@ -17,15 +17,12 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, _r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
         let mut scatter_direction = rec.normal + random_unit_vector();
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
         }
-        let scattered = Ray {
-            orig: rec.p,
-            dir: scatter_direction,
-        };
+        let scattered = Ray::new_tm(rec.p, scatter_direction, r_in.tm);
         let attenuation = self.albedo;
         Some((attenuation, scattered))
     }
@@ -48,10 +45,11 @@ impl Metal {
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
         let reflected = reflect(unit_vector(r_in.dir), rec.normal);
-        let scattered = Ray {
-            orig: rec.p,
-            dir: reflected + random_in_unit_sphere() * self.fuzz,
-        };
+        let scattered = Ray::new_tm(
+            rec.p,
+            reflected + random_in_unit_sphere() * self.fuzz,
+            r_in.tm,
+        );
         let attenuation = self.albedo;
         if dot(scattered.dir, rec.normal) > 0.0 {
             Some((attenuation, scattered))
@@ -99,18 +97,16 @@ impl Material for Dielectric {
         {
             Some((
                 attenuation,
-                Ray {
-                    orig: rec.p,
-                    dir: reflect(unit_direction, rec.normal),
-                },
+                Ray::new_tm(rec.p, reflect(unit_direction, rec.normal), r_in.tm),
             ))
         } else {
             Some((
                 attenuation,
-                Ray {
-                    orig: rec.p,
-                    dir: refract(unit_direction, rec.normal, refraction_ratio),
-                },
+                Ray::new_tm(
+                    rec.p,
+                    refract(unit_direction, rec.normal, refraction_ratio),
+                    r_in.tm,
+                ),
             ))
         }
 

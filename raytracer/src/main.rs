@@ -1,4 +1,4 @@
-#![allow(unused_imports)]
+#![allow(unused_imports, dead_code, unused_assignments)]
 
 mod aabb;
 mod bvh;
@@ -206,9 +206,45 @@ fn random_scene() -> HittableList {
     world
 }
 
+fn two_spheres() -> HittableList {
+    let mut objects = HittableList::new();
+    let checker = Rc::new(CheckerTexture::new(
+        Color {
+            x: 0.2,
+            y: 0.3,
+            z: 0.1,
+        },
+        Color {
+            x: 0.9,
+            y: 0.9,
+            z: 0.9,
+        },
+    ));
+    objects.add(Rc::new(Sphere {
+        center: Point3 {
+            x: 0.0,
+            y: -10.0,
+            z: 0.0,
+        },
+        radius: 10.0,
+        mat_ptr: Rc::new(Lambertian {
+            albedo: checker.clone(),
+        }),
+    }));
+    objects.add(Rc::new(Sphere {
+        center: Point3 {
+            x: 0.0,
+            y: 10.0,
+            z: 0.0,
+        },
+        radius: 10.0,
+        mat_ptr: Rc::new(Lambertian { albedo: checker }),
+    }));
+    objects
+}
 fn main() {
     //path
-    let path = std::path::Path::new("output/book2/image2.jpg");
+    let path = std::path::Path::new("output/book2/image3.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -221,32 +257,56 @@ fn main() {
 
     //World
 
-    let world = random_scene();
-
+    let world: HittableList;
+    let mut lookfrom = Point3::new();
+    let mut lookat = Point3::new();
+    let mut vfov = 40.0;
+    let mut aperture = 0.0;
+    let world_type = 0;
+    match world_type {
+        1 => {
+            world = random_scene();
+            lookfrom = Point3 {
+                x: 13.0,
+                y: 2.0,
+                z: 3.0,
+            };
+            lookat = Point3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            };
+            vfov = 20.0;
+            aperture = 0.1;
+        }
+        _ => {
+            world = two_spheres();
+            lookfrom = Point3 {
+                x: 13.0,
+                y: 2.0,
+                z: 3.0,
+            };
+            lookat = Point3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            };
+            vfov = 20.0;
+        }
+    }
     //Camera
 
-    let lookfrom = Vec3 {
-        x: 13.0,
-        y: 2.0,
-        z: 3.0,
-    };
-    let lookat = Vec3 {
-        x: 0.0,
-        y: 0.0,
-        z: 0.0,
-    };
     let vup = Vec3 {
         x: 0.0,
         y: 1.0,
         z: 0.0,
     };
-    let aperture = 0.1;
     let dist_to_focus = 10.0;
     let cam = Camera::new(
         lookfrom,
         lookat,
         vup,
-        20.0,
+        vfov,
         aspect_ratio,
         aperture,
         dist_to_focus,

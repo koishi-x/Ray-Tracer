@@ -58,6 +58,17 @@ impl Perlin {
         Self::perlin_interp(&c, u, v, w)
     }
 
+    pub fn turb(&self, mut p: Point3, depth: i32) -> f64 {
+        let mut accum = 0.0;
+        let mut weight = 1.0;
+        for _ in 0..depth {
+            accum += weight * self.noise(p);
+            weight *= 0.5;
+            p *= 2.0;
+        }
+        accum.abs()
+    }
+
     fn perlin_generate_perm() -> Vec<usize> {
         let mut p = vec![0; Self::POINT_COUNT];
 

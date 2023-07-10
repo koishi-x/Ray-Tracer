@@ -58,7 +58,8 @@ impl Texture for NoiseTexture {
             x: 1.0,
             y: 1.0,
             z: 1.0,
-        } * self.noise.noise(p * self.scale)
+        } * 0.5
+            * (1.0 + self.noise.noise(p * self.scale))
     }
 }
 

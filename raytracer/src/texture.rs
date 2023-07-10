@@ -46,3 +46,25 @@ impl Texture for CheckerTexture {
         }
     }
 }
+
+pub struct NoiseTexture {
+    pub noise: Perlin,
+}
+
+impl Texture for NoiseTexture {
+    fn value(&self, u: f64, v: f64, p: Point3) -> Color {
+        Color {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0,
+        } * self.noise.noise(p)
+    }
+}
+
+impl NoiseTexture {
+    pub fn new() -> NoiseTexture {
+        NoiseTexture {
+            noise: Perlin::new(),
+        }
+    }
+}

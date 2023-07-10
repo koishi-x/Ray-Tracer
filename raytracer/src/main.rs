@@ -7,6 +7,7 @@ mod color;
 mod hittable_list;
 mod material;
 mod moving_sphere;
+mod perlin;
 mod ray;
 mod rtweekend;
 mod sphere;
@@ -20,6 +21,7 @@ use color::*;
 use hittable_list::*;
 use material::*;
 use moving_sphere::*;
+use perlin::*;
 use ray::*;
 use rtweekend::*;
 use sphere::*;
@@ -242,9 +244,37 @@ fn two_spheres() -> HittableList {
     }));
     objects
 }
+
+fn two_perlin_spheres() -> HittableList {
+    let mut objects = HittableList::new();
+
+    let pertext = Rc::new(NoiseTexture::new());
+
+    objects.add(Rc::new(Sphere {
+        center: Point3 {
+            x: 0.0,
+            y: -1000.0,
+            z: 0.0,
+        },
+        radius: 1000.0,
+        mat_ptr: Rc::new(Lambertian {
+            albedo: pertext.clone(),
+        }),
+    }));
+    objects.add(Rc::new(Sphere {
+        center: Point3 {
+            x: 0.0,
+            y: 2.0,
+            z: 0.0,
+        },
+        radius: 2.0,
+        mat_ptr: Rc::new(Lambertian { albedo: pertext }),
+    }));
+    objects
+}
 fn main() {
     //path
-    let path = std::path::Path::new("output/book2/image3.jpg");
+    let path = std::path::Path::new("output/book2/image7.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -279,8 +309,22 @@ fn main() {
             vfov = 20.0;
             aperture = 0.1;
         }
-        _ => {
+        2 => {
             world = two_spheres();
+            lookfrom = Point3 {
+                x: 13.0,
+                y: 2.0,
+                z: 3.0,
+            };
+            lookat = Point3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            };
+            vfov = 20.0;
+        }
+        _ => {
+            world = two_perlin_spheres();
             lookfrom = Point3 {
                 x: 13.0,
                 y: 2.0,

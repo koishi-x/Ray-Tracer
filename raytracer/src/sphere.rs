@@ -1,4 +1,4 @@
-use crate::{hittable_list::*, vec3::*, Material, Ray};
+use crate::*;
 
 #[derive(Clone)]
 pub struct Sphere {
@@ -14,6 +14,22 @@ impl Sphere {
     //         radius: 0.0,
     //     }
     // }
+    fn get_sphere_uv(p: Point3) -> (f64, f64) {
+        // p: a given point on the sphere of radius one, centered at the origin.
+        // u: returned value [0,1] of angle around the Y axis from X=-1.
+        // v: returned value [0,1] of angle from Y=-1 to Y=+1.
+        //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
+        //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
+        //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
+
+        let theta = (-p.y).acos();
+        let phi = (-p.z).atan2(p.x) + PI;
+
+        // *u = phi / (2.0 * PI);
+        // *v = theta / PI;
+
+        (phi / (2.0 * PI), theta / PI)
+    }
 }
 
 impl Hittable for Sphere {
@@ -40,14 +56,25 @@ impl Hittable for Sphere {
         let outward_normal = (p - self.center) / self.radius;
         //let mat_ptr = self.mat_ptr;
         let mut rec = HitRecord::new(t, p, &self.mat_ptr);
-        //     {
-        //     t,
-        //     p,
-        //     mat_ptr: self.mat_ptr.clone(),
-        //     normal: outward_normal,
-        //     front_face: false,
-        // };
         rec.set_face_normal(r, outward_normal);
+        (rec.u, rec.v) = Sphere::get_sphere_uv(outward_normal);
+
         Some(rec)
+    }
+    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<crate::aabb::AABB> {
+        Some(AABB::new(
+            self.center
+                - Vec3 {
+                    x: self.radius,
+                    y: self.radius,
+                    z: self.radius,
+                },
+            self.center
+                + Vec3 {
+                    x: self.radius,
+                    y: self.radius,
+                    z: self.radius,
+                },
+        ))
     }
 }

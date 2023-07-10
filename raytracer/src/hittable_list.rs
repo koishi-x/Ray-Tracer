@@ -1,9 +1,6 @@
-pub use std::vec::Vec;
+use crate::*;
 
 pub mod hittable;
-
-use crate::ray::*;
-
 pub use hittable::*;
 pub struct HittableList {
     objects: Vec<Rc<dyn Hittable>>,
@@ -40,5 +37,25 @@ impl Hittable for HittableList {
             }
         }
         rec
+    }
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+        if self.objects.is_empty() {
+            return None;
+        }
+        //let mut first_box = true;
+        let mut output_box: Option<AABB> = None;
+
+        for object in &self.objects {
+            match object.bounding_box(time0, time1) {
+                None => return None,
+                Some(temp_box) => {
+                    output_box = match output_box {
+                        None => Some(temp_box),
+                        Some(last_box) => Some(surrounding_box(&temp_box, &last_box)),
+                    }
+                }
+            }
+        }
+        output_box
     }
 }

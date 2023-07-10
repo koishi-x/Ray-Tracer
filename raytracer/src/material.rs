@@ -1,17 +1,22 @@
+#![allow(dead_code)]
 use crate::random_double_default;
+use crate::*;
 
-//use hittable_list::*;
-use crate::{clamp, vec3::*, HitRecord, Ray};
 pub trait Material {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)>;
 }
 
 pub struct Lambertian {
-    pub albedo: Vec3,
+    pub albedo: Rc<dyn Texture>,
 }
 
 impl Lambertian {
-    pub fn new(a: Vec3) -> Lambertian {
+    pub fn new(a: Color) -> Lambertian {
+        Lambertian {
+            albedo: Rc::new(SolidColor::new(a)),
+        }
+    }
+    pub fn new_texture(a: Rc<dyn Texture>) -> Lambertian {
         Lambertian { albedo: a }
     }
 }
@@ -23,7 +28,7 @@ impl Material for Lambertian {
             scatter_direction = rec.normal;
         }
         let scattered = Ray::new_tm(rec.p, scatter_direction, r_in.tm);
-        let attenuation = self.albedo;
+        let attenuation = self.albedo.value(rec.u, rec.v, rec.p);
         Some((attenuation, scattered))
     }
 }

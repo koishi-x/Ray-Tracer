@@ -10,7 +10,7 @@ pub struct Vec3 {
 }
 
 pub type Point3 = Vec3;
-//pub type Color = Vec3;
+pub type Color = Vec3;
 
 impl Add for Vec3 {
     type Output = Vec3;

@@ -50,4 +50,35 @@ impl Hittable for MovingSphere {
         rec.set_face_normal(r, outward_normal);
         Some(rec)
     }
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+        let box0 = AABB::new(
+            self.center(time0)
+                - Vec3 {
+                    x: self.radius,
+                    y: self.radius,
+                    z: self.radius,
+                },
+            self.center(time0)
+                + Vec3 {
+                    x: self.radius,
+                    y: self.radius,
+                    z: self.radius,
+                },
+        );
+        let box1 = AABB::new(
+            self.center(time1)
+                - Vec3 {
+                    x: self.radius,
+                    y: self.radius,
+                    z: self.radius,
+                },
+            self.center(time1)
+                + Vec3 {
+                    x: self.radius,
+                    y: self.radius,
+                    z: self.radius,
+                },
+        );
+        Some(surrounding_box(&box0, &box1))
+    }
 }

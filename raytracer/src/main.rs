@@ -1,3 +1,7 @@
+#![allow(unused_imports)]
+
+mod aabb;
+mod bvh;
 mod camera;
 mod color;
 mod hittable_list;
@@ -6,8 +10,11 @@ mod moving_sphere;
 mod ray;
 mod rtweekend;
 mod sphere;
+mod texture;
 mod vec3;
 
+use aabb::*;
+use bvh::*;
 use camera::*;
 use color::*;
 use hittable_list::*;
@@ -16,6 +23,7 @@ use moving_sphere::*;
 use ray::*;
 use rtweekend::*;
 use sphere::*;
+use texture::*;
 use vec3::*;
 
 fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
@@ -48,20 +56,43 @@ fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
 fn random_scene() -> HittableList {
     let mut world: HittableList = HittableList::new();
 
-    let ground_material = Rc::new(Lambertian::new(Vec3 {
-        x: 0.5,
-        y: 0.5,
-        z: 0.5,
-    }));
+    // let ground_material = Rc::new(Lambertian::new(Vec3 {
+    //     x: 0.5,
+    //     y: 0.5,
+    //     z: 0.5,
+    // }));
 
+    // world.add(Rc::new(Sphere {
+    //     center: Vec3 {
+    //         x: 0.0,
+    //         y: -1000.0,
+    //         z: 0.0,
+    //     },
+    //     radius: 1000.0,
+    //     mat_ptr: ground_material,
+    // }));
+    let checker = CheckerTexture::new(
+        Color {
+            x: 0.2,
+            y: 0.3,
+            z: 0.1,
+        },
+        Color {
+            x: 0.9,
+            y: 0.9,
+            z: 0.9,
+        },
+    );
     world.add(Rc::new(Sphere {
-        center: Vec3 {
+        center: Point3 {
             x: 0.0,
             y: -1000.0,
             z: 0.0,
         },
         radius: 1000.0,
-        mat_ptr: ground_material,
+        mat_ptr: Rc::new(Lambertian {
+            albedo: Rc::new(checker),
+        }),
     }));
 
     for a in -11..11 {
@@ -177,7 +208,7 @@ fn random_scene() -> HittableList {
 
 fn main() {
     //path
-    let path = std::path::Path::new("output/book2/image1.jpg");
+    let path = std::path::Path::new("output/book2/image2.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 

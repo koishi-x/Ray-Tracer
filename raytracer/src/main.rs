@@ -272,9 +272,27 @@ fn two_perlin_spheres() -> HittableList {
     }));
     objects
 }
+
+fn earth() -> HittableList {
+    let earth_texture = Rc::new(ImageTexture::new("input/earthmap.jpg"));
+    let earth_surface = Rc::new(Lambertian::new_texture(earth_texture));
+
+    let mut objects = HittableList::new();
+    objects.add(Rc::new(Sphere {
+        center: Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        },
+        radius: 2.0,
+        mat_ptr: earth_surface,
+    }));
+    objects
+}
+
 fn main() {
     //path
-    let path = std::path::Path::new("output/book2/image13.jpg");
+    let path = std::path::Path::new("output/book2/image15.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -323,8 +341,22 @@ fn main() {
             };
             vfov = 20.0;
         }
-        _ => {
+        3 => {
             world = two_perlin_spheres();
+            lookfrom = Point3 {
+                x: 13.0,
+                y: 2.0,
+                z: 3.0,
+            };
+            lookat = Point3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            };
+            vfov = 20.0;
+        }
+        _ => {
+            world = earth();
             lookfrom = Point3 {
                 x: 13.0,
                 y: 2.0,

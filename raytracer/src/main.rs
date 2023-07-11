@@ -327,13 +327,29 @@ fn simple_light() -> HittableList {
         y: 4.0,
         z: 4.0,
     }));
-    objects.add(Rc::new(XYRect::new(3.0, 5.0, 1.0, 3.0, -2.0, difflight)));
+    objects.add(Rc::new(XYRect::new(
+        3.0,
+        5.0,
+        1.0,
+        3.0,
+        -2.0,
+        difflight.clone(),
+    )));
+    objects.add(Rc::new(Sphere {
+        center: Point3 {
+            x: 0.0,
+            y: 7.0,
+            z: 0.0,
+        },
+        radius: 2.0,
+        mat_ptr: difflight,
+    }));
     objects
 }
 
 fn main() {
     //path
-    let path = std::path::Path::new("output/book2/image16.jpg");
+    let path = std::path::Path::new("output/book2/image17.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 

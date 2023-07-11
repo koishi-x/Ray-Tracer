@@ -14,5 +14,5 @@ Cargo.lock
 *.pdb
 
 output/
-input/
+*.Identifier
 test.sh

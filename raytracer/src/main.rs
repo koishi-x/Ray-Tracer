@@ -1,6 +1,7 @@
 #![allow(unused_imports, dead_code, unused_assignments)]
 
 mod aabb;
+mod aarect;
 mod bvh;
 mod camera;
 mod color;
@@ -15,6 +16,7 @@ mod texture;
 mod vec3;
 
 use aabb::*;
+use aarect::*;
 use bvh::*;
 use camera::*;
 use color::*;
@@ -28,29 +30,36 @@ use sphere::*;
 use texture::*;
 use vec3::*;
 
-fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Vec3 {
+fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Vec3 {
     if depth <= 0 {
         return Vec3::new();
     }
 
     match world.hit(r, 0.001, INFINITY) {
-        Some(rec) => match (*rec.mat_ptr).scatter(r, &rec) {
-            None => Vec3::new(),
-            Some((attenuation, scattered)) => attenuation * ray_color(&scattered, world, depth - 1),
-        },
+        Some(rec) => {
+            let emitted = rec.mat_ptr.emitted(rec.u, rec.v, rec.p);
+
+            match (*rec.mat_ptr).scatter(r, &rec) {
+                None => emitted,
+                Some((attenuation, scattered)) => {
+                    emitted + attenuation * ray_color(&scattered, background, world, depth - 1)
+                }
+            }
+        }
         None => {
-            let unit_direction = unit_vector(r.dir);
-            let t = 0.5 * (unit_direction.y + 1.0);
-            Vec3 {
-                x: 1.0,
-                y: 1.0,
-                z: 1.0,
-            } * (1.0 - t)
-                + Vec3 {
-                    x: 0.5,
-                    y: 0.7,
-                    z: 1.0,
-                } * t
+            background
+            // let unit_direction = unit_vector(r.dir);
+            // let t = 0.5 * (unit_direction.y + 1.0);
+            // Vec3 {
+            //     x: 1.0,
+            //     y: 1.0,
+            //     z: 1.0,
+            // } * (1.0 - t)
+            //     + Vec3 {
+            //         x: 0.5,
+            //         y: 0.7,
+            //         z: 1.0,
+            //     } * t
         }
     }
 }
@@ -290,9 +299,41 @@ fn earth() -> HittableList {
     objects
 }
 
+fn simple_light() -> HittableList {
+    let mut objects: HittableList = HittableList::new();
+
+    let pertext = Rc::new(NoiseTexture::new(4.0));
+    objects.add(Rc::new(Sphere {
+        center: Point3 {
+            x: 0.0,
+            y: -1000.0,
+            z: 0.0,
+        },
+        radius: 1000.0,
+        mat_ptr: Rc::new(Lambertian::new_texture(pertext.clone())),
+    }));
+    objects.add(Rc::new(Sphere {
+        center: Point3 {
+            x: 0.0,
+            y: 2.0,
+            z: 0.0,
+        },
+        radius: 2.0,
+        mat_ptr: Rc::new(Lambertian::new_texture(pertext)),
+    }));
+
+    let difflight = Rc::new(DiffuseLight::new(Color {
+        x: 4.0,
+        y: 4.0,
+        z: 4.0,
+    }));
+    objects.add(Rc::new(XYRect::new(3.0, 5.0, 1.0, 3.0, -2.0, difflight)));
+    objects
+}
+
 fn main() {
     //path
-    let path = std::path::Path::new("output/book2/image15.jpg");
+    let path = std::path::Path::new("output/book2/image16.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -300,20 +341,27 @@ fn main() {
     let aspect_ratio: f64 = 16.0 / 9.0;
     let image_width: u32 = 400;
     let image_height: u32 = (image_width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel: u32 = 100;
+    let mut samples_per_pixel: u32 = 100;
     let max_depth = 50;
 
     //World
 
-    let world: HittableList;
+    let mut world = HittableList::new();
     let mut lookfrom = Point3::new();
     let mut lookat = Point3::new();
     let mut vfov = 40.0;
     let mut aperture = 0.0;
+    let mut background = Color::new();
+
     let world_type = 0;
     match world_type {
         1 => {
             world = random_scene();
+            background = Color {
+                x: 0.7,
+                y: 0.8,
+                z: 1.0,
+            };
             lookfrom = Point3 {
                 x: 13.0,
                 y: 2.0,
@@ -329,6 +377,11 @@ fn main() {
         }
         2 => {
             world = two_spheres();
+            background = Color {
+                x: 0.7,
+                y: 0.8,
+                z: 1.0,
+            };
             lookfrom = Point3 {
                 x: 13.0,
                 y: 2.0,
@@ -343,6 +396,30 @@ fn main() {
         }
         3 => {
             world = two_perlin_spheres();
+            background = Color {
+                x: 0.7,
+                y: 0.8,
+                z: 1.0,
+            };
+            lookfrom = Point3 {
+                x: 13.0,
+                y: 2.0,
+                z: 3.0,
+            };
+            lookat = Point3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            };
+            vfov = 20.0;
+        }
+        4 => {
+            world = earth();
+            background = Color {
+                x: 0.7,
+                y: 0.8,
+                z: 1.0,
+            };
             lookfrom = Point3 {
                 x: 13.0,
                 y: 2.0,
@@ -356,18 +433,25 @@ fn main() {
             vfov = 20.0;
         }
         _ => {
-            world = earth();
-            lookfrom = Point3 {
-                x: 13.0,
-                y: 2.0,
-                z: 3.0,
-            };
-            lookat = Point3 {
+            world = simple_light();
+            background = Color::new();
+            samples_per_pixel = 400;
+            background = Color {
                 x: 0.0,
                 y: 0.0,
                 z: 0.0,
             };
-            vfov = 20.0;
+            lookfrom = Point3 {
+                x: 26.0,
+                y: 3.0,
+                z: 6.0,
+            };
+            lookat = Point3 {
+                x: 0.0,
+                y: 2.0,
+                z: 0.0,
+            };
+            vfov = 20.0
         }
     }
     //Camera
@@ -407,7 +491,7 @@ fn main() {
                 let u = (i as f64 + random_double_default()) / ((image_width - 1) as f64);
                 let v = (j as f64 + random_double_default()) / ((image_height - 1) as f64);
                 let r = cam.get_ray(u, v, 0.0, 1.0);
-                pixel_color += ray_color(&r, &world, max_depth);
+                pixel_color += ray_color(&r, background, &world, max_depth);
             }
             *pixel = image::Rgb(write_color(pixel_color, samples_per_pixel));
 

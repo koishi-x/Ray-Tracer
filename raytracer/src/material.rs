@@ -4,6 +4,9 @@ use crate::*;
 
 pub trait Material {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)>;
+    fn emitted(&self, _u: f64, _v: f64, _p: Point3) -> Color {
+        Color::new()
+    }
 }
 
 pub struct Lambertian {
@@ -122,5 +125,29 @@ impl Material for Dielectric {
         //     dir: refracted,
         // };
         // Some((attenuation, scattered))
+    }
+}
+
+pub struct DiffuseLight {
+    pub emit: Rc<dyn Texture>,
+}
+
+impl DiffuseLight {
+    pub fn new(c: Color) -> DiffuseLight {
+        DiffuseLight {
+            emit: Rc::new(SolidColor::new(c)),
+        }
+    }
+    pub fn new_texture(a: Rc<dyn Texture>) -> DiffuseLight {
+        DiffuseLight { emit: a }
+    }
+}
+
+impl Material for DiffuseLight {
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord) -> Option<(Vec3, Ray)> {
+        None
+    }
+    fn emitted(&self, u: f64, v: f64, p: Point3) -> Color {
+        self.emit.value(u, v, p)
     }
 }

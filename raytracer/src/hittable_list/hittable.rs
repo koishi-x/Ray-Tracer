@@ -30,7 +30,11 @@ impl HitRecord {
     pub fn new(t: f64, p: Vec3, mat_ptr: &Rc<dyn Material>) -> HitRecord {
         HitRecord {
             p,
-            normal: Vec3::new(),
+            normal: Vec3 {
+                x: 1.0,
+                y: 0.0,
+                z: 0.0,
+            },
             mat_ptr: mat_ptr.clone(),
             t,
             u: 0.0,

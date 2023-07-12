@@ -6,6 +6,7 @@ mod aarect;
 mod bvh;
 mod camera;
 mod color;
+mod constant_medium;
 mod hittable_list;
 mod material;
 mod moving_sphere;
@@ -22,6 +23,7 @@ use aarect::*;
 use bvh::*;
 use camera::*;
 use color::*;
+use constant_medium::*;
 use hittable_list::*;
 use material::*;
 use moving_sphere::*;
@@ -456,9 +458,129 @@ fn cornell_box() -> HittableList {
     // bvh
 }
 
+fn cornell_smoke() -> HittableList {
+    let mut objects = HittableList::new();
+    let red = Rc::new(Lambertian::new(Vec3 {
+        x: 0.65,
+        y: 0.05,
+        z: 0.05,
+    }));
+    let white = Rc::new(Lambertian::new(Vec3 {
+        x: 0.73,
+        y: 0.73,
+        z: 0.73,
+    }));
+    let green = Rc::new(Lambertian::new(Vec3 {
+        x: 0.12,
+        y: 0.45,
+        z: 0.15,
+    }));
+    let light = Rc::new(DiffuseLight::new(Vec3 {
+        x: 7.0,
+        y: 7.0,
+        z: 7.0,
+    }));
+
+    objects.add(Rc::new(YZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, green)));
+    objects.add(Rc::new(YZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, red)));
+    objects.add(Rc::new(XZRect::new(
+        113.0, 443.0, 127.0, 432.0, 554.0, light,
+    )));
+    objects.add(Rc::new(XZRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        0.0,
+        white.clone(),
+    )));
+    objects.add(Rc::new(XZRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        white.clone(),
+    )));
+    objects.add(Rc::new(XYRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        white.clone(),
+    )));
+
+    let mut box1: Rc<dyn Hittable> = Rc::new(AABox::new(
+        Point3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        },
+        Point3 {
+            x: 165.0,
+            y: 330.0,
+            z: 165.0,
+        },
+        white.clone(),
+    ));
+    box1 = Rc::new(RotateY::new(box1, 15.0));
+    box1 = Rc::new(Translate::new(
+        box1,
+        Vec3 {
+            x: 265.0,
+            y: 0.0,
+            z: 295.0,
+        },
+    ));
+
+    let mut box2: Rc<dyn Hittable> = Rc::new(AABox::new(
+        Point3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        },
+        Point3 {
+            x: 165.0,
+            y: 165.0,
+            z: 165.0,
+        },
+        white,
+    ));
+    box2 = Rc::new(RotateY::new(box2, -18.0));
+    box2 = Rc::new(Translate::new(
+        box2,
+        Vec3 {
+            x: 130.0,
+            y: 0.0,
+            z: 65.0,
+        },
+    ));
+
+    objects.add(Rc::new(ConstantMedium::new_color(
+        box1,
+        0.01,
+        Color {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        },
+    )));
+    objects.add(Rc::new(ConstantMedium::new_color(
+        box2,
+        0.01,
+        Color {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0,
+        },
+    )));
+    objects
+}
+
 fn main() {
     //path
-    let path = std::path::Path::new("output/book2/image20.jpg");
+    let path = std::path::Path::new("output/book2/image21.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -577,7 +699,7 @@ fn main() {
             };
             vfov = 20.0
         }
-        _ => {
+        6 => {
             world = cornell_box();
             aspect_ratio = 1.0;
             image_width = 600;
@@ -587,6 +709,23 @@ fn main() {
                 y: 0.0,
                 z: 0.0,
             };
+            lookfrom = Point3 {
+                x: 278.0,
+                y: 278.0,
+                z: -800.0,
+            };
+            lookat = Point3 {
+                x: 278.0,
+                y: 278.0,
+                z: 0.0,
+            };
+            vfov = 40.0;
+        }
+        _ => {
+            world = cornell_smoke();
+            aspect_ratio = 1.0;
+            image_width = 600;
+            samples_per_pixel = 200;
             lookfrom = Point3 {
                 x: 278.0,
                 y: 278.0,

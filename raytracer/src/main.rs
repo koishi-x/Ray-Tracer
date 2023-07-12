@@ -578,9 +578,178 @@ fn cornell_smoke() -> HittableList {
     objects
 }
 
+fn final_scene() -> HittableList {
+    let mut objects = HittableList::new();
+    let mut boxes1 = HittableList::new();
+    let ground = Rc::new(Lambertian::new(Color {
+        x: 0.48,
+        y: 0.83,
+        z: 0.53,
+    }));
+
+    let boxes_per_side = 20;
+    for i in 0..boxes_per_side {
+        for j in 0..boxes_per_side {
+            let w = 100.0;
+            let x0 = -1000.0 + i as f64 * w;
+            let z0 = -1000.0 + j as f64 * w;
+            let y0 = 0.0;
+            let x1 = x0 + w;
+            let y1 = random_double(1.0, 101.0);
+            let z1 = z0 + w;
+
+            boxes1.add(Rc::new(AABox::new(
+                Point3 {
+                    x: x0,
+                    y: y0,
+                    z: z0,
+                },
+                Point3 {
+                    x: x1,
+                    y: y1,
+                    z: z1,
+                },
+                ground.clone(),
+            )));
+        }
+    }
+    objects.add(Rc::new(BvhNode::new_hittablelist(boxes1, 0.0, 1.0)));
+
+    let light = Rc::new(DiffuseLight::new(Color {
+        x: 7.0,
+        y: 7.0,
+        z: 7.0,
+    }));
+    objects.add(Rc::new(XZRect::new(
+        123.0, 423.0, 147.0, 412.0, 554.0, light,
+    )));
+
+    let center0 = Point3 {
+        x: 400.0,
+        y: 400.0,
+        z: 200.0,
+    };
+    let center1 = center0
+        + Vec3 {
+            x: 30.0,
+            y: 0.0,
+            z: 0.0,
+        };
+    let moving_sphere_material = Rc::new(Lambertian::new(Color {
+        x: 0.7,
+        y: 0.3,
+        z: 0.1,
+    }));
+    objects.add(Rc::new(MovingSphere {
+        center0,
+        center1,
+        time0: 0.0,
+        time1: 1.0,
+        radius: 50.0,
+        mat_ptr: moving_sphere_material,
+    }));
+
+    objects.add(Rc::new(Sphere {
+        center: Point3 {
+            x: 260.0,
+            y: 150.0,
+            z: 45.0,
+        },
+        radius: 50.0,
+        mat_ptr: Rc::new(Dielectric::new(1.5)),
+    }));
+    objects.add(Rc::new(Sphere {
+        center: Point3 {
+            x: 0.0,
+            y: 150.0,
+            z: 145.0,
+        },
+        radius: 50.0,
+        mat_ptr: Rc::new(Metal::new(
+            Color {
+                x: 0.8,
+                y: 0.8,
+                z: 0.9,
+            },
+            1.0,
+        )),
+    }));
+
+    let boundary = Rc::new(Sphere {
+        center: Point3 {
+            x: 360.0,
+            y: 150.0,
+            z: 145.0,
+        },
+        radius: 70.0,
+        mat_ptr: Rc::new(Dielectric::new(1.5)),
+    });
+    objects.add(boundary.clone());
+    objects.add(Rc::new(ConstantMedium::new_color(
+        boundary,
+        0.0001,
+        Color {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0,
+        },
+    )));
+
+    let emat = Rc::new(Lambertian::new_texture(Rc::new(ImageTexture::new(
+        "input/earthmap.jpg",
+    ))));
+    objects.add(Rc::new(Sphere {
+        center: Point3 {
+            x: 400.0,
+            y: 200.0,
+            z: 400.0,
+        },
+        radius: 100.0,
+        mat_ptr: emat,
+    }));
+    let pertext = Rc::new(NoiseTexture::new(0.1));
+    objects.add(Rc::new(Sphere {
+        center: Point3 {
+            x: 220.0,
+            y: 280.0,
+            z: 300.0,
+        },
+        radius: 80.0,
+        mat_ptr: Rc::new(Lambertian::new_texture(pertext)),
+    }));
+
+    let mut boxes2 = HittableList::new();
+    let white = Rc::new(Lambertian::new(Color {
+        x: 0.73,
+        y: 0.73,
+        z: 0.73,
+    }));
+    let ns = 1000;
+    for _ in 0..ns {
+        boxes2.add(Rc::new(Sphere {
+            center: random(0.0, 165.0),
+            radius: 10.0,
+            mat_ptr: white.clone(),
+        }));
+    }
+    objects.add(Rc::new(Translate::new(
+        Rc::new(RotateY::new(
+            Rc::new(BvhNode::new_hittablelist(boxes2, 0.0, 1.0)),
+            -15.0,
+        )),
+        Point3 {
+            x: -100.0,
+            y: 270.0,
+            z: 395.0,
+        },
+    )));
+
+    objects
+}
+
 fn main() {
     //path
-    let path = std::path::Path::new("output/book2/image21.jpg");
+    let path = std::path::Path::new("output/book2/image22.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -721,7 +890,7 @@ fn main() {
             };
             vfov = 40.0;
         }
-        _ => {
+        7 => {
             world = cornell_smoke();
             aspect_ratio = 1.0;
             image_width = 600;
@@ -730,6 +899,24 @@ fn main() {
                 x: 278.0,
                 y: 278.0,
                 z: -800.0,
+            };
+            lookat = Point3 {
+                x: 278.0,
+                y: 278.0,
+                z: 0.0,
+            };
+            vfov = 40.0;
+        }
+        _ => {
+            world = final_scene();
+            aspect_ratio = 1.0;
+            image_width = 800;
+            samples_per_pixel = 10000;
+            background = Color::new();
+            lookfrom = Point3 {
+                x: 478.0,
+                y: 278.0,
+                z: -600.0,
             };
             lookat = Point3 {
                 x: 278.0,

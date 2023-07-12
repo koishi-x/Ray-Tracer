@@ -48,3 +48,138 @@ impl HitRecord {
         };
     }
 }
+
+pub struct Translate {
+    pub ptr: Rc<dyn Hittable>,
+    pub offset: Vec3,
+}
+
+impl Translate {
+    pub fn new(p: Rc<dyn Hittable>, displacement: Vec3) -> Translate {
+        Translate {
+            ptr: p,
+            offset: displacement,
+        }
+    }
+}
+
+impl Hittable for Translate {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let moved_r = Ray::new_tm(r.orig - self.offset, r.dir, r.tm);
+        match self.ptr.hit(&moved_r, t_min, t_max) {
+            None => None,
+            Some(mut rec) => {
+                rec.p += self.offset;
+                rec.set_face_normal(&moved_r, rec.normal);
+                Some(rec)
+            }
+        }
+    }
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB> {
+        self.ptr.bounding_box(time0, time1).map(|output_box| {
+            AABB::new(
+                output_box.minimum + self.offset,
+                output_box.maximum + self.offset,
+            )
+        })
+    }
+}
+
+pub struct RotateY {
+    pub ptr: Rc<dyn Hittable>,
+    pub sin_theta: f64,
+    pub cos_theta: f64,
+    pub bbox: Option<AABB>,
+}
+
+impl RotateY {
+    pub fn new(p: Rc<dyn Hittable>, angle: f64) -> RotateY {
+        let radians = degrees_to_radians(angle);
+        let sin_theta = radians.sin();
+        let cos_theta = radians.cos();
+        let bbox = p.bounding_box(0.0, 1.0);
+        if bbox.is_none() {
+            return RotateY {
+                ptr: p,
+                sin_theta,
+                cos_theta,
+                bbox,
+            };
+        }
+        let mut min = Point3 {
+            x: INFINITY,
+            y: INFINITY,
+            z: INFINITY,
+        };
+        let mut max = Point3 {
+            x: -INFINITY,
+            y: -INFINITY,
+            z: -INFINITY,
+        };
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    let x = i as f64 * bbox.unwrap().maximum.x
+                        + (1 - i) as f64 * bbox.unwrap().minimum.x;
+                    let y = j as f64 * bbox.unwrap().maximum.y
+                        + (1 - j) as f64 * bbox.unwrap().minimum.y;
+                    let z = k as f64 * bbox.unwrap().maximum.z
+                        + (1 - k) as f64 * bbox.unwrap().minimum.z;
+
+                    let new_x = cos_theta * x + sin_theta * z;
+                    let new_z = -sin_theta * x + cos_theta * z;
+
+                    min.x = min.x.min(new_x);
+                    max.x = max.x.max(new_x);
+                    min.y = min.y.min(y);
+                    max.y = max.y.max(y);
+                    min.z = min.z.min(new_z);
+                    max.z = max.z.max(new_z);
+                }
+            }
+        }
+        RotateY {
+            ptr: p,
+            sin_theta,
+            cos_theta,
+            bbox: Some(AABB::new(min, max)),
+        }
+    }
+}
+
+impl Hittable for RotateY {
+    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
+        self.bbox
+    }
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let origin = Point3 {
+            x: r.orig.x * self.cos_theta - r.orig.z * self.sin_theta,
+            y: r.orig.y,
+            z: r.orig.x * self.sin_theta + r.orig.z * self.cos_theta,
+        };
+        let direction = Vec3 {
+            x: r.dir.x * self.cos_theta - r.dir.z * self.sin_theta,
+            y: r.dir.y,
+            z: r.dir.x * self.sin_theta + r.dir.z * self.cos_theta,
+        };
+        let rotated_r = Ray::new_tm(origin, direction, r.tm);
+
+        match self.ptr.hit(&rotated_r, t_min, t_max) {
+            None => None,
+            Some(mut rec) => {
+                let mut p = rec.p;
+                let mut normal = rec.normal;
+                p.x = self.cos_theta * rec.p.x + self.sin_theta * rec.p.z;
+                p.z = -self.sin_theta * rec.p.x + self.cos_theta * rec.p.z;
+
+                normal.x = self.cos_theta * rec.normal.x + self.sin_theta * rec.normal.z;
+                normal.z = -self.sin_theta * rec.normal.x + self.cos_theta * rec.normal.z;
+
+                rec.p = p;
+                rec.set_face_normal(&rotated_r, normal);
+
+                Some(rec)
+            }
+        }
+    }
+}

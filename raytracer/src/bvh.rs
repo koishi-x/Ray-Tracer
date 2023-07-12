@@ -14,7 +14,7 @@ impl Hittable for BvhNode {
         Some(self.box_)
     }
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        // if self.box_.hit(r, t_min, t_max).is_none() {
+        // if let None = self.box_.hit(r, t_min, t_max) {
         //     return None;
         // }
         self.box_.hit(r, t_min, t_max)?;
@@ -34,7 +34,7 @@ impl Hittable for BvhNode {
 }
 
 impl BvhNode {
-    fn new(
+    pub fn new(
         mut src_objects: Vec<Rc<dyn Hittable>>,
         start: usize,
         end: usize,
@@ -75,7 +75,7 @@ impl BvhNode {
             src_objects[start..end].sort_by(comparator);
             let mid = start + object_span / 2;
             left = Rc::new(BvhNode::new(src_objects.clone(), start, mid, time0, time1));
-            right = Rc::new(BvhNode::new(src_objects, mid + 1, end, time0, time1));
+            right = Rc::new(BvhNode::new(src_objects, mid, end, time0, time1));
         }
 
         let box_ = surrounding_box(
@@ -83,6 +83,11 @@ impl BvhNode {
             &(right.bounding_box(time0, time1).unwrap()),
         );
         BvhNode { left, right, box_ }
+    }
+    pub fn new_hittablelist(list: HittableList, time0: f64, time1: f64) -> Self {
+        let len = list.objects.len();
+        //println!("{len}");
+        Self::new(list.objects, 0, len, time0, time1)
     }
 }
 

@@ -401,38 +401,64 @@ fn cornell_box() -> HittableList {
         555.0,
         white.clone(),
     )));
-    objects.add(Rc::new(AABox::new(
+
+    let mut box1: Rc<dyn Hittable> = Rc::new(AABox::new(
         Point3 {
-            x: 130.0,
+            x: 0.0,
             y: 0.0,
-            z: 65.0,
+            z: 0.0,
         },
         Point3 {
-            x: 295.0,
-            y: 165.0,
-            z: 230.0,
+            x: 165.0,
+            y: 330.0,
+            z: 165.0,
         },
         white.clone(),
-    )));
-    objects.add(Rc::new(AABox::new(
-        Point3 {
+    ));
+    box1 = Rc::new(RotateY::new(box1, 15.0));
+    box1 = Rc::new(Translate::new(
+        box1,
+        Vec3 {
             x: 265.0,
             y: 0.0,
             z: 295.0,
         },
+    ));
+    objects.add(box1);
+
+    let mut box2: Rc<dyn Hittable> = Rc::new(AABox::new(
         Point3 {
-            x: 430.0,
-            y: 330.0,
-            z: 460.0,
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        },
+        Point3 {
+            x: 165.0,
+            y: 165.0,
+            z: 165.0,
         },
         white,
-    )));
+    ));
+    box2 = Rc::new(RotateY::new(box2, -18.0));
+    box2 = Rc::new(Translate::new(
+        box2,
+        Vec3 {
+            x: 130.0,
+            y: 0.0,
+            z: 65.0,
+        },
+    ));
+    objects.add(box2);
+
     objects
+    // let mut bvh = HittableList::new();
+    // bvh.add(Rc::new(BvhNode::new_hittablelist(objects, 0.0, 1.0)));
+    // bvh
 }
 
 fn main() {
     //path
-    let path = std::path::Path::new("output/book2/image19.jpg");
+    let path = std::path::Path::new("output/book2/image20.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 

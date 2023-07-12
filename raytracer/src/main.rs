@@ -1,6 +1,7 @@
 #![allow(unused_imports, dead_code, unused_assignments)]
 
 mod aabb;
+mod aabox;
 mod aarect;
 mod bvh;
 mod camera;
@@ -16,6 +17,7 @@ mod texture;
 mod vec3;
 
 use aabb::*;
+use aabox::*;
 use aarect::*;
 use bvh::*;
 use camera::*;
@@ -391,13 +393,46 @@ fn cornell_box() -> HittableList {
         555.0,
         white.clone(),
     )));
-    objects.add(Rc::new(XYRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
+    objects.add(Rc::new(XYRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        white.clone(),
+    )));
+    objects.add(Rc::new(AABox::new(
+        Point3 {
+            x: 130.0,
+            y: 0.0,
+            z: 65.0,
+        },
+        Point3 {
+            x: 295.0,
+            y: 165.0,
+            z: 230.0,
+        },
+        white.clone(),
+    )));
+    objects.add(Rc::new(AABox::new(
+        Point3 {
+            x: 265.0,
+            y: 0.0,
+            z: 295.0,
+        },
+        Point3 {
+            x: 430.0,
+            y: 330.0,
+            z: 460.0,
+        },
+        white,
+    )));
     objects
 }
 
 fn main() {
     //path
-    let path = std::path::Path::new("output/book2/image18.jpg");
+    let path = std::path::Path::new("output/book2/image19.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 

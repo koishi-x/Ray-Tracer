@@ -347,16 +347,63 @@ fn simple_light() -> HittableList {
     objects
 }
 
+fn cornell_box() -> HittableList {
+    let mut objects = HittableList::new();
+    let red = Rc::new(Lambertian::new(Vec3 {
+        x: 0.65,
+        y: 0.05,
+        z: 0.05,
+    }));
+    let white = Rc::new(Lambertian::new(Vec3 {
+        x: 0.73,
+        y: 0.73,
+        z: 0.73,
+    }));
+    let green = Rc::new(Lambertian::new(Vec3 {
+        x: 0.12,
+        y: 0.45,
+        z: 0.15,
+    }));
+    let light = Rc::new(DiffuseLight::new(Vec3 {
+        x: 15.0,
+        y: 15.0,
+        z: 15.0,
+    }));
+
+    objects.add(Rc::new(YZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, green)));
+    objects.add(Rc::new(YZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, red)));
+    objects.add(Rc::new(XZRect::new(
+        213.0, 343.0, 227.0, 332.0, 554.0, light,
+    )));
+    objects.add(Rc::new(XZRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        0.0,
+        white.clone(),
+    )));
+    objects.add(Rc::new(XZRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        white.clone(),
+    )));
+    objects.add(Rc::new(XYRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
+    objects
+}
+
 fn main() {
     //path
-    let path = std::path::Path::new("output/book2/image17.jpg");
+    let path = std::path::Path::new("output/book2/image18.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
     //Image
-    let aspect_ratio: f64 = 16.0 / 9.0;
-    let image_width: u32 = 400;
-    let image_height: u32 = (image_width as f64 / aspect_ratio) as u32;
+    let mut aspect_ratio: f64 = 16.0 / 9.0;
+    let mut image_width: u32 = 400;
     let mut samples_per_pixel: u32 = 100;
     let max_depth = 50;
 
@@ -448,7 +495,7 @@ fn main() {
             };
             vfov = 20.0;
         }
-        _ => {
+        5 => {
             world = simple_light();
             background = Color::new();
             samples_per_pixel = 400;
@@ -469,7 +516,30 @@ fn main() {
             };
             vfov = 20.0
         }
+        _ => {
+            world = cornell_box();
+            aspect_ratio = 1.0;
+            image_width = 600;
+            samples_per_pixel = 200;
+            background = Color {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            };
+            lookfrom = Point3 {
+                x: 278.0,
+                y: 278.0,
+                z: -800.0,
+            };
+            lookat = Point3 {
+                x: 278.0,
+                y: 278.0,
+                z: 0.0,
+            };
+            vfov = 40.0;
+        }
     }
+    let image_height: u32 = (image_width as f64 / aspect_ratio) as u32;
     //Camera
 
     let vup = Vec3 {

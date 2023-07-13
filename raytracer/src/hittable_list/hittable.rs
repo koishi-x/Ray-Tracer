@@ -1,7 +1,7 @@
 use crate::*;
 
-//pub use std::sync::Arc;
-pub use std::rc::Rc;
+//pub use std::sync::AArc;
+pub use std::sync::Arc;
 pub trait Hittable {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB>;
@@ -11,7 +11,7 @@ pub trait Hittable {
 pub struct HitRecord {
     pub p: Vec3,
     pub normal: Vec3,
-    pub mat_ptr: Rc<dyn Material>,
+    pub mat_ptr: Arc<dyn Material + Send + Sync>,
     pub t: f64,
     pub u: f64,
     pub v: f64,
@@ -27,7 +27,7 @@ impl HitRecord {
     //         front_face: false,
     //     }
     // }
-    pub fn new(t: f64, p: Vec3, mat_ptr: &Rc<dyn Material>) -> HitRecord {
+    pub fn new(t: f64, p: Vec3, mat_ptr: &Arc<dyn Material + Send + Sync>) -> HitRecord {
         HitRecord {
             p,
             normal: Vec3 {
@@ -54,12 +54,12 @@ impl HitRecord {
 }
 
 pub struct Translate {
-    pub ptr: Rc<dyn Hittable>,
+    pub ptr: Arc<dyn Hittable + Send + Sync>,
     pub offset: Vec3,
 }
 
 impl Translate {
-    pub fn new(p: Rc<dyn Hittable>, displacement: Vec3) -> Translate {
+    pub fn new(p: Arc<dyn Hittable + Send + Sync>, displacement: Vec3) -> Translate {
         Translate {
             ptr: p,
             offset: displacement,
@@ -90,14 +90,14 @@ impl Hittable for Translate {
 }
 
 pub struct RotateY {
-    pub ptr: Rc<dyn Hittable>,
+    pub ptr: Arc<dyn Hittable + Send + Sync>,
     pub sin_theta: f64,
     pub cos_theta: f64,
     pub bbox: Option<AABB>,
 }
 
 impl RotateY {
-    pub fn new(p: Rc<dyn Hittable>, angle: f64) -> RotateY {
+    pub fn new(p: Arc<dyn Hittable + Send + Sync>, angle: f64) -> RotateY {
         let radians = degrees_to_radians(angle);
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();

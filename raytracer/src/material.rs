@@ -10,16 +10,16 @@ pub trait Material {
 }
 
 pub struct Lambertian {
-    pub albedo: Rc<dyn Texture>,
+    pub albedo: Arc<dyn Texture + Send + Sync>,
 }
 
 impl Lambertian {
     pub fn new(a: Color) -> Lambertian {
         Lambertian {
-            albedo: Rc::new(SolidColor::new(a)),
+            albedo: Arc::new(SolidColor::new(a)),
         }
     }
-    pub fn new_texture(a: Rc<dyn Texture>) -> Lambertian {
+    pub fn new_texture(a: Arc<dyn Texture + Send + Sync>) -> Lambertian {
         Lambertian { albedo: a }
     }
 }
@@ -129,16 +129,16 @@ impl Material for Dielectric {
 }
 
 pub struct DiffuseLight {
-    pub emit: Rc<dyn Texture>,
+    pub emit: Arc<dyn Texture + Send + Sync>,
 }
 
 impl DiffuseLight {
     pub fn new(c: Color) -> DiffuseLight {
         DiffuseLight {
-            emit: Rc::new(SolidColor::new(c)),
+            emit: Arc::new(SolidColor::new(c)),
         }
     }
-    pub fn new_texture(a: Rc<dyn Texture>) -> DiffuseLight {
+    pub fn new_texture(a: Arc<dyn Texture + Send + Sync>) -> DiffuseLight {
         DiffuseLight { emit: a }
     }
 }
@@ -153,16 +153,16 @@ impl Material for DiffuseLight {
 }
 
 pub struct Isotropic {
-    pub albedo: Rc<dyn Texture>,
+    pub albedo: Arc<dyn Texture + Send + Sync>,
 }
 
 impl Isotropic {
     pub fn new_color(c: Color) -> Isotropic {
         Isotropic {
-            albedo: Rc::new(SolidColor::new(c)),
+            albedo: Arc::new(SolidColor::new(c)),
         }
     }
-    pub fn new(a: Rc<dyn Texture>) -> Isotropic {
+    pub fn new(a: Arc<dyn Texture + Send + Sync>) -> Isotropic {
         Isotropic { albedo: a }
     }
 }

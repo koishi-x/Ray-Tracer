@@ -25,15 +25,15 @@ impl Texture for SolidColor {
 }
 
 pub struct CheckerTexture {
-    pub odd: Rc<dyn Texture>,
-    pub even: Rc<dyn Texture>,
+    pub odd: Arc<dyn Texture + Send + Sync>,
+    pub even: Arc<dyn Texture + Send + Sync>,
 }
 
 impl CheckerTexture {
     pub fn new(c1: Color, c2: Color) -> CheckerTexture {
         CheckerTexture {
-            odd: Rc::new(SolidColor::new(c1)),
-            even: Rc::new(SolidColor::new(c2)),
+            odd: Arc::new(SolidColor::new(c1)),
+            even: Arc::new(SolidColor::new(c2)),
         }
     }
 }

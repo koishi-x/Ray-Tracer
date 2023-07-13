@@ -1,8 +1,11 @@
+use std::sync;
+
 use crate::rtweekend::random_double;
 use crate::{random_in_unit_disk, unit_vector};
 
 use crate::{degrees_to_radians, Ray, Vec3};
 
+#[derive(Clone, Copy)]
 pub struct Camera {
     origin: Vec3,
     lower_left_corner: Vec3,
@@ -61,3 +64,6 @@ impl Camera {
         )
     }
 }
+
+unsafe impl Send for Camera {}
+unsafe impl Sync for Camera {}

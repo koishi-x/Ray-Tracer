@@ -4,7 +4,7 @@ use crate::*;
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
-    pub mat_ptr: Rc<dyn Material>,
+    pub mat_ptr: Arc<dyn Material + Send + Sync>,
 }
 
 impl Sphere {

@@ -2,9 +2,14 @@ use crate::*;
 
 pub mod hittable;
 pub use hittable::*;
+
+#[derive(Clone)]
 pub struct HittableList {
-    pub objects: Vec<Rc<dyn Hittable>>,
+    pub objects: Vec<Arc<dyn Hittable + Send + Sync>>,
 }
+
+unsafe impl Send for HittableList {}
+unsafe impl Sync for HittableList {}
 
 impl HittableList {
     pub fn new() -> Self {
@@ -13,7 +18,7 @@ impl HittableList {
         }
     }
 
-    pub fn add(&mut self, object: Rc<dyn Hittable>) {
+    pub fn add(&mut self, object: Arc<dyn Hittable + Send + Sync>) {
         self.objects.push(object);
     }
 

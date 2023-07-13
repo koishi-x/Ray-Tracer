@@ -7,9 +7,9 @@ pub struct AABox {
 }
 
 impl AABox {
-    pub fn new(p0: Point3, p1: Point3, ptr: Rc<dyn Material>) -> AABox {
+    pub fn new(p0: Point3, p1: Point3, ptr: Arc<dyn Material + Send + Sync>) -> AABox {
         let mut sides = HittableList::new();
-        sides.add(Rc::new(XYRect::new(
+        sides.add(Arc::new(XYRect::new(
             p0.x,
             p1.x,
             p0.y,
@@ -17,7 +17,7 @@ impl AABox {
             p1.z,
             ptr.clone(),
         )));
-        sides.add(Rc::new(XYRect::new(
+        sides.add(Arc::new(XYRect::new(
             p0.x,
             p1.x,
             p0.y,
@@ -26,7 +26,7 @@ impl AABox {
             ptr.clone(),
         )));
 
-        sides.add(Rc::new(XZRect::new(
+        sides.add(Arc::new(XZRect::new(
             p0.x,
             p1.x,
             p0.z,
@@ -34,7 +34,7 @@ impl AABox {
             p1.y,
             ptr.clone(),
         )));
-        sides.add(Rc::new(XZRect::new(
+        sides.add(Arc::new(XZRect::new(
             p0.x,
             p1.x,
             p0.z,
@@ -43,7 +43,7 @@ impl AABox {
             ptr.clone(),
         )));
 
-        sides.add(Rc::new(YZRect::new(
+        sides.add(Arc::new(YZRect::new(
             p0.y,
             p1.y,
             p0.z,
@@ -51,7 +51,7 @@ impl AABox {
             p1.x,
             ptr.clone(),
         )));
-        sides.add(Rc::new(YZRect::new(p0.y, p1.y, p0.z, p1.z, p0.x, ptr)));
+        sides.add(Arc::new(YZRect::new(p0.y, p1.y, p0.z, p1.z, p0.x, ptr)));
 
         AABox {
             box_min: p0,

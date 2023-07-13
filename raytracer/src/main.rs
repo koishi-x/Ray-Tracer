@@ -695,7 +695,7 @@ fn final_scene() -> HittableList {
     objects.add(boundary.clone());
 
     objects.add(Arc::new(ConstantMedium::new_color(
-        boundary.clone(),
+        boundary,
         0.2,
         Color {
             x: 0.2,
@@ -1014,13 +1014,10 @@ fn main() {
     }
     multi_progress.join_and_clear().unwrap();
 
-    let mut cnt: i32 = 0;
     for rx in receivers {
         for received in rx {
             let pixel = img.get_pixel_mut(received.i, received.j);
             *pixel = image::Rgb(write_color(received.color, samples_per_pixel));
-
-            cnt = cnt + 1;
         }
     }
 

@@ -50,11 +50,16 @@ fn ray_color(r: &Ray, background: Color, world: &(dyn Hittable + Send + Sync), d
     match world.hit(r, 0.001, INFINITY) {
         Some(rec) => {
             let emitted = rec.mat_ptr.emitted(rec.u, rec.v, rec.p);
+            let mut pdf: f64 = 0.0;
 
-            match (*rec.mat_ptr).scatter(r, &rec) {
+            match (*rec.mat_ptr).scatter(r, &rec, &mut pdf) {
                 None => emitted,
-                Some((attenuation, scattered)) => {
-                    emitted + attenuation * ray_color(&scattered, background, world, depth - 1)
+                Some((albedo, scattered)) => {
+                    emitted
+                        + albedo
+                            * ray_color(&scattered, background, world, depth - 1)
+                            * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
+                            / pdf
                 }
             }
         }
@@ -775,7 +780,7 @@ fn final_scene() -> HittableList {
 
 fn main() {
     //path
-    let path = std::path::Path::new("output/book2/image22.jpg");
+    let path = std::path::Path::new("output/book3/image1.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -794,7 +799,7 @@ fn main() {
     let mut aperture = 0.0;
     let mut background = Color::new();
 
-    let world_type = 0;
+    let world_type = 6;
     match world_type {
         1 => {
             world = random_scene();
@@ -898,7 +903,7 @@ fn main() {
             world = cornell_box();
             aspect_ratio = 1.0;
             image_width = 600;
-            samples_per_pixel = 200;
+            samples_per_pixel = 1000;
             background = Color {
                 x: 0.0,
                 y: 0.0,
@@ -975,6 +980,7 @@ fn main() {
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
 
     const THREAD_NUM: u32 = 16;
+    const PROGRESS_INC_NUM: u64 = 100;
 
     let multi_progress = MultiProgress::new();
 
@@ -993,7 +999,8 @@ fn main() {
         let (tx, rx) = mpsc::channel();
         receivers.push(rx);
         let world_tmp = world.clone();
-        let pb = multi_progress.add(ProgressBar::new(task.len() as u64));
+        let pb = multi_progress.add(ProgressBar::new(task.len() as u64 / PROGRESS_INC_NUM));
+        let mut count = 0;
         let cur_thread: thread::JoinHandle<()> = thread::spawn(move || {
             for (i, j) in task {
                 let mut pixel_color = Vec3::new();
@@ -1006,7 +1013,11 @@ fn main() {
                 }
                 tx.send(ColorInformation::new(i, image_height - j - 1, pixel_color))
                     .unwrap();
-                pb.inc(1);
+                count += 1;
+                if count == PROGRESS_INC_NUM {
+                    pb.inc(1);
+                    count = 0;
+                }
             }
             pb.finish();
         });

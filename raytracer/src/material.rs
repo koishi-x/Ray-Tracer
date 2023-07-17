@@ -1,9 +1,15 @@
 #![allow(dead_code)]
+#![allow(unused_variables)]
 use crate::random_double_default;
 use crate::*;
 
 pub trait Material {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)>;
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, pdf: &mut f64) -> Option<(Vec3, Ray)> {
+        None
+    }
+    fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
+        0.0
+    }
     fn emitted(&self, _u: f64, _v: f64, _p: Point3) -> Color {
         Color::new()
     }
@@ -25,14 +31,24 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, pdf: &mut f64) -> Option<(Vec3, Ray)> {
         let mut scatter_direction = rec.normal + random_unit_vector();
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
         }
-        let scattered = Ray::new_tm(rec.p, scatter_direction, r_in.tm);
-        let attenuation = self.albedo.value(rec.u, rec.v, rec.p);
-        Some((attenuation, scattered))
+        let scattered = Ray::new_tm(rec.p, unit_vector(scatter_direction), r_in.tm);
+        let alb = self.albedo.value(rec.u, rec.v, rec.p);
+        *pdf = dot(rec.normal, scattered.dir) / PI;
+
+        Some((alb, scattered))
+    }
+    fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        let cosine = dot(rec.normal, unit_vector(scattered.dir));
+        if cosine < 0.0 {
+            0.0
+        } else {
+            cosine / PI
+        }
     }
 }
 
@@ -51,7 +67,7 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, pdf: &mut f64) -> Option<(Vec3, Ray)> {
         let reflected = reflect(unit_vector(r_in.dir), rec.normal);
         let scattered = Ray::new_tm(
             rec.p,
@@ -85,7 +101,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, pdf: &mut f64) -> Option<(Vec3, Ray)> {
         let attenuation = Vec3 {
             x: 1.0,
             y: 1.0,
@@ -144,7 +160,7 @@ impl DiffuseLight {
 }
 
 impl Material for DiffuseLight {
-    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, pdf: &mut f64) -> Option<(Vec3, Ray)> {
         None
     }
     fn emitted(&self, u: f64, v: f64, p: Point3) -> Color {
@@ -168,7 +184,7 @@ impl Isotropic {
 }
 
 impl Material for Isotropic {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, pdf: &mut f64) -> Option<(Vec3, Ray)> {
         Some((
             self.albedo.value(rec.u, rec.v, rec.p),
             Ray::new_tm(rec.p, random_in_unit_sphere(), r_in.tm),

@@ -60,11 +60,11 @@ fn ray_color(
     match world.hit(r, 0.001, INFINITY) {
         Some(rec) => {
             let emitted = rec.mat_ptr.emitted(r, &rec, rec.u, rec.v, rec.p);
-            let mut pdf: f64 = 0.0;
+            //let mut pdf: f64 = 0.0;
 
-            match (*rec.mat_ptr).scatter(r, &rec, &mut pdf) {
+            match (*rec.mat_ptr).scatter(r, &rec) {
                 None => emitted,
-                Some((albedo, _scattered)) => {
+                Some(srec) => {
                     // let on_light = Point3 {
                     //     x: random_double(213.0, 343.0),
                     //     y: 554.0,
@@ -89,13 +89,20 @@ fn ray_color(
                     // let p = CosinePdf::new(rec.normal);
                     // let scattered = Ray::new_tm(rec.p, p.generate(), r.tm);
                     // let pdf_val = p.value(scattered.dir);
+                    if srec.is_specular {
+                        return srec.attenuation
+                            * ray_color(&srec.specular_ray, background, world, lights, depth - 1);
+                    }
 
-                    let light_pdf = HittablePdf::new(lights.clone(), rec.p);
-                    let scattered = Ray::new_tm(rec.p, light_pdf.generate(), r.tm);
-                    let pdf_val = light_pdf.value(scattered.dir);
+                    let light_ptr = Arc::new(HittablePdf::new(lights.clone(), rec.p));
+                    //let p1 = Arc::new(CosinePdf::new(rec.normal));
+                    let p = MixturePdf::new(light_ptr, srec.pdf_ptr);
+
+                    let scattered = Ray::new_tm(rec.p, p.generate(), r.tm);
+                    let pdf_val = p.value(scattered.dir);
 
                     emitted
-                        + albedo
+                        + srec.attenuation
                             * ray_color(&scattered, background, world, lights, depth - 1)
                             * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
                             / pdf_val
@@ -448,15 +455,16 @@ fn cornell_box() -> HittableList {
         555.0,
         white.clone(),
     )));
-    objects.add(Arc::new(XYRect::new(
-        0.0,
-        555.0,
-        0.0,
-        555.0,
-        555.0,
-        white.clone(),
-    )));
+    objects.add(Arc::new(XYRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
 
+    let aluminum = Arc::new(Metal::new(
+        Color {
+            x: 0.8,
+            y: 0.85,
+            z: 0.88,
+        },
+        0.0,
+    ));
     let mut box1: Arc<dyn Hittable> = Arc::new(AABox::new(
         Point3 {
             x: 0.0,
@@ -468,7 +476,7 @@ fn cornell_box() -> HittableList {
             y: 330.0,
             z: 165.0,
         },
-        white.clone(),
+        aluminum,
     ));
     box1 = Arc::new(RotateY::new(box1, 15.0));
     box1 = Arc::new(Translate::new(
@@ -481,29 +489,39 @@ fn cornell_box() -> HittableList {
     ));
     objects.add(box1);
 
-    let mut box2: Arc<dyn Hittable> = Arc::new(AABox::new(
-        Point3 {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
+    let glass = Arc::new(Dielectric::new(1.5));
+    // let mut box2: Arc<dyn Hittable> = Arc::new(AABox::new(
+    //     Point3 {
+    //         x: 0.0,
+    //         y: 0.0,
+    //         z: 0.0,
+    //     },
+    //     Point3 {
+    //         x: 165.0,
+    //         y: 165.0,
+    //         z: 165.0,
+    //     },
+    //     glass,
+    // ));
+    // box2 = Arc::new(RotateY::new(box2, -18.0));
+    // box2 = Arc::new(Translate::new(
+    //     box2,
+    //     Vec3 {
+    //         x: 130.0,
+    //         y: 0.0,
+    //         z: 65.0,
+    //     },
+    // ));
+    // objects.add(box2);
+    objects.add(Arc::new(Sphere {
+        center: Point3 {
+            x: 190.0,
+            y: 90.0,
+            z: 190.0,
         },
-        Point3 {
-            x: 165.0,
-            y: 165.0,
-            z: 165.0,
-        },
-        white,
-    ));
-    box2 = Arc::new(RotateY::new(box2, -18.0));
-    box2 = Arc::new(Translate::new(
-        box2,
-        Vec3 {
-            x: 130.0,
-            y: 0.0,
-            z: 65.0,
-        },
-    ));
-    objects.add(box2);
+        radius: 90.0,
+        mat_ptr: glass,
+    }));
 
     objects
     // let mut bvh = HittableList::new();
@@ -820,7 +838,7 @@ fn final_scene() -> HittableList {
 
 fn main() {
     //path
-    let path = std::path::Path::new("output/book3/image7.jpg");
+    let path = std::path::Path::new("output/book3/image9.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -951,7 +969,7 @@ fn main() {
             world = cornell_box();
             aspect_ratio = 1.0;
             image_width = 600;
-            samples_per_pixel = 10;
+            samples_per_pixel = 1000;
             background = Color {
                 x: 0.0,
                 y: 0.0,

@@ -15,6 +15,16 @@ pub fn random_cosine_direction() -> Vec3 {
     Vec3 { x, y, z }
 }
 
+pub struct DefaultPdf {}
+
+impl Pdf for DefaultPdf {
+    fn value(&self, _direction: Vec3) -> f64 {
+        0.0
+    }
+    fn generate(&self) -> Vec3 {
+        Vec3::new()
+    }
+}
 pub struct CosinePdf {
     pub uvw: ONB,
 }
@@ -58,5 +68,28 @@ impl Pdf for HittablePdf {
     }
     fn generate(&self) -> Vec3 {
         self.ptr.random(self.o)
+    }
+}
+
+pub struct MixturePdf {
+    pub p: [Arc<dyn Pdf>; 2],
+}
+
+impl MixturePdf {
+    pub fn new(p0: Arc<dyn Pdf>, p1: Arc<dyn Pdf>) -> MixturePdf {
+        MixturePdf { p: [p0, p1] }
+    }
+}
+
+impl Pdf for MixturePdf {
+    fn value(&self, direction: Vec3) -> f64 {
+        0.5 * self.p[0].value(direction) + 0.5 * self.p[1].value(direction)
+    }
+    fn generate(&self) -> Vec3 {
+        if random_double_default() < 0.5 {
+            self.p[0].generate()
+        } else {
+            self.p[1].generate()
+        }
     }
 }

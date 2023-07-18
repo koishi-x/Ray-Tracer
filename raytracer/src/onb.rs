@@ -29,7 +29,7 @@ impl ONB {
 
     pub fn build_from_w(n: Vec3) -> ONB {
         let w = unit_vector(n);
-        let a = if w.x > 0.9 {
+        let a = if w.x.abs() > 0.9 {
             Vec3 {
                 x: 0.0,
                 y: 1.0,

@@ -11,6 +11,7 @@ mod hittable_list;
 mod material;
 mod moving_sphere;
 mod onb;
+mod pdf;
 mod perlin;
 mod ray;
 mod rtweekend;
@@ -34,6 +35,7 @@ use hittable_list::*;
 use material::*;
 use moving_sphere::*;
 use onb::*;
+use pdf::*;
 use perlin::*;
 use ray::*;
 use rtweekend::*;
@@ -51,38 +53,41 @@ fn ray_color(r: &Ray, background: Color, world: &(dyn Hittable + Send + Sync), d
 
     match world.hit(r, 0.001, INFINITY) {
         Some(rec) => {
-            let emitted = rec.mat_ptr.emitted(rec.u, rec.v, rec.p);
+            let emitted = rec.mat_ptr.emitted(r, &rec, rec.u, rec.v, rec.p);
             let mut pdf: f64 = 0.0;
 
             match (*rec.mat_ptr).scatter(r, &rec, &mut pdf) {
                 None => emitted,
                 Some((albedo, _scattered)) => {
-                    let on_light = Point3 {
-                        x: random_double(213.0, 343.0),
-                        y: 554.0,
-                        z: random_double(227.0, 332.0),
-                    };
-                    let mut to_light = on_light - rec.p;
-                    let distance_squared = to_light.length_squared();
-                    to_light = unit_vector(to_light);
+                    // let on_light = Point3 {
+                    //     x: random_double(213.0, 343.0),
+                    //     y: 554.0,
+                    //     z: random_double(227.0, 332.0),
+                    // };
+                    // let mut to_light = on_light - rec.p;
+                    // let distance_squared = to_light.length_squared();
+                    // to_light = unit_vector(to_light);
 
-                    if dot(to_light, rec.normal) < 0.0 {
-                        return emitted;
-                    }
-                    let light_area = (343.0 - 213.0) * (332.0 - 227.0);
-                    let light_cosine = to_light.y.abs();
-                    if light_cosine < 0.000001 {
-                        return emitted;
-                    }
+                    // if dot(to_light, rec.normal) < 0.0 {
+                    //     return emitted;
+                    // }
+                    // let light_area = (343.0 - 213.0) * (332.0 - 227.0);
+                    // let light_cosine = to_light.y.abs();
+                    // if light_cosine < 0.000001 {
+                    //     return emitted;
+                    // }
 
-                    pdf = distance_squared / (light_cosine * light_area);
-                    let scattered = Ray::new_tm(rec.p, to_light, r.tm);
+                    // pdf = distance_squared / (light_cosine * light_area);
+                    // let scattered = Ray::new_tm(rec.p, to_light, r.tm);
+                    let p = CosinePdf::new(rec.normal);
+                    let scattered = Ray::new_tm(rec.p, p.generate(), r.tm);
+                    let pdf_val = p.value(scattered.dir);
 
                     emitted
                         + albedo
                             * ray_color(&scattered, background, world, depth - 1)
                             * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
-                            / pdf
+                            / pdf_val
                 }
             }
         }
@@ -412,9 +417,10 @@ fn cornell_box() -> HittableList {
 
     objects.add(Arc::new(YZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, green)));
     objects.add(Arc::new(YZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, red)));
-    objects.add(Arc::new(XZRect::new(
+
+    objects.add(Arc::new(FlipFace::new(Arc::new(XZRect::new(
         213.0, 343.0, 227.0, 332.0, 554.0, light,
-    )));
+    )))));
     objects.add(Arc::new(XZRect::new(
         0.0,
         555.0,
@@ -803,7 +809,7 @@ fn final_scene() -> HittableList {
 
 fn main() {
     //path
-    let path = std::path::Path::new("output/book3/image4.jpg");
+    let path = std::path::Path::new("output/book3/image6.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -926,7 +932,7 @@ fn main() {
             world = cornell_box();
             aspect_ratio = 1.0;
             image_width = 600;
-            samples_per_pixel = 10;
+            samples_per_pixel = 1000;
             background = Color {
                 x: 0.0,
                 y: 0.0,

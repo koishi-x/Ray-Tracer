@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, BitXor, Div, Mul, MulAssign, Neg, Sub};
 
-use crate::random_double;
+use crate::*;
 
 #[derive(Clone, Copy)]
 pub struct Vec3 {
@@ -166,14 +166,14 @@ pub fn random_in_unit_sphere() -> Vec3 {
     }
 }
 
-// pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
-//     let in_unit_sphere = random_in_unit_sphere();
-//     if dot(in_unit_sphere, normal) > 0.0 {
-//         in_unit_sphere
-//     } else {
-//         -in_unit_sphere
-//     }
-// }
+pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+    let in_unit_sphere = random_in_unit_sphere();
+    if dot(in_unit_sphere, normal) > 0.0 {
+        in_unit_sphere
+    } else {
+        -in_unit_sphere
+    }
+}
 
 pub fn random_in_unit_disk() -> Vec3 {
     loop {
@@ -214,4 +214,14 @@ pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
     let r_out_perp = (uv + n * cos_theta) * etai_over_etat;
     let r_out_parallel = -(n * (1.0 - r_out_perp.length_squared()).abs().sqrt());
     r_out_perp + r_out_parallel
+}
+
+pub fn random_cosine_direction() -> Vec3 {
+    let r1 = random_double_default();
+    let r2 = random_double_default();
+    let z = (1.0 - r2).sqrt();
+    let phi = 2.0 * PI * r1;
+    let x = phi.cos() * r2.sqrt();
+    let y = phi.sin() * r2.sqrt();
+    Vec3 { x, y, z }
 }

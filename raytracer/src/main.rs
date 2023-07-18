@@ -10,6 +10,7 @@ mod constant_medium;
 mod hittable_list;
 mod material;
 mod moving_sphere;
+mod onb;
 mod perlin;
 mod ray;
 mod rtweekend;
@@ -32,6 +33,7 @@ use constant_medium::*;
 use hittable_list::*;
 use material::*;
 use moving_sphere::*;
+use onb::*;
 use perlin::*;
 use ray::*;
 use rtweekend::*;
@@ -54,7 +56,28 @@ fn ray_color(r: &Ray, background: Color, world: &(dyn Hittable + Send + Sync), d
 
             match (*rec.mat_ptr).scatter(r, &rec, &mut pdf) {
                 None => emitted,
-                Some((albedo, scattered)) => {
+                Some((albedo, _scattered)) => {
+                    let on_light = Point3 {
+                        x: random_double(213.0, 343.0),
+                        y: 554.0,
+                        z: random_double(227.0, 332.0),
+                    };
+                    let mut to_light = on_light - rec.p;
+                    let distance_squared = to_light.length_squared();
+                    to_light = unit_vector(to_light);
+
+                    if dot(to_light, rec.normal) < 0.0 {
+                        return emitted;
+                    }
+                    let light_area = (343.0 - 213.0) * (332.0 - 227.0);
+                    let light_cosine = to_light.y.abs();
+                    if light_cosine < 0.000001 {
+                        return emitted;
+                    }
+
+                    pdf = distance_squared / (light_cosine * light_area);
+                    let scattered = Ray::new_tm(rec.p, to_light, r.tm);
+
                     emitted
                         + albedo
                             * ray_color(&scattered, background, world, depth - 1)
@@ -780,7 +803,7 @@ fn final_scene() -> HittableList {
 
 fn main() {
     //path
-    let path = std::path::Path::new("output/book3/image1.jpg");
+    let path = std::path::Path::new("output/book3/image4.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -903,7 +926,7 @@ fn main() {
             world = cornell_box();
             aspect_ratio = 1.0;
             image_width = 600;
-            samples_per_pixel = 1000;
+            samples_per_pixel = 10;
             background = Color {
                 x: 0.0,
                 y: 0.0,

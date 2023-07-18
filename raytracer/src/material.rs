@@ -32,14 +32,23 @@ impl Lambertian {
 
 impl Material for Lambertian {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, pdf: &mut f64) -> Option<(Vec3, Ray)> {
-        let mut scatter_direction = rec.normal + random_unit_vector();
-        if scatter_direction.near_zero() {
-            scatter_direction = rec.normal;
-        }
+        // let mut scatter_direction = rec.normal + random_unit_vector();
+        // if scatter_direction.near_zero() {
+        //     scatter_direction = rec.normal;
+        // }
+
+        //let scatter_direction = random_in_hemisphere(rec.normal);
+
+        let uvw = ONB::build_from_w(rec.normal);
+        let scatter_direction = uvw.local_vec(random_cosine_direction());
+
         let scattered = Ray::new_tm(rec.p, unit_vector(scatter_direction), r_in.tm);
         let alb = self.albedo.value(rec.u, rec.v, rec.p);
-        *pdf = dot(rec.normal, scattered.dir) / PI;
+        // *pdf = dot(rec.normal, scattered.dir) / PI;
 
+        //*pdf = 0.5 / PI;
+
+        *pdf = dot(uvw.w(), scattered.dir) / PI;
         Some((alb, scattered))
     }
     fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {

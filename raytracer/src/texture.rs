@@ -4,7 +4,7 @@ use image::GenericImageView;
 
 use crate::*;
 
-pub trait Texture {
+pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: Point3) -> Color;
 }
 
@@ -25,8 +25,8 @@ impl Texture for SolidColor {
 }
 
 pub struct CheckerTexture {
-    pub odd: Arc<dyn Texture + Send + Sync>,
-    pub even: Arc<dyn Texture + Send + Sync>,
+    pub odd: Arc<dyn Texture>,
+    pub even: Arc<dyn Texture>,
 }
 
 impl CheckerTexture {

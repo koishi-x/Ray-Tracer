@@ -46,7 +46,13 @@ use vec3::*;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::time::Duration;
 
-fn ray_color(r: &Ray, background: Color, world: &(dyn Hittable + Send + Sync), depth: i32) -> Vec3 {
+fn ray_color(
+    r: &Ray,
+    background: Color,
+    world: &(dyn Hittable),
+    lights: Arc<dyn Hittable>,
+    depth: i32,
+) -> Vec3 {
     if depth <= 0 {
         return Vec3::new();
     }
@@ -79,13 +85,18 @@ fn ray_color(r: &Ray, background: Color, world: &(dyn Hittable + Send + Sync), d
 
                     // pdf = distance_squared / (light_cosine * light_area);
                     // let scattered = Ray::new_tm(rec.p, to_light, r.tm);
-                    let p = CosinePdf::new(rec.normal);
-                    let scattered = Ray::new_tm(rec.p, p.generate(), r.tm);
-                    let pdf_val = p.value(scattered.dir);
+
+                    // let p = CosinePdf::new(rec.normal);
+                    // let scattered = Ray::new_tm(rec.p, p.generate(), r.tm);
+                    // let pdf_val = p.value(scattered.dir);
+
+                    let light_pdf = HittablePdf::new(lights.clone(), rec.p);
+                    let scattered = Ray::new_tm(rec.p, light_pdf.generate(), r.tm);
+                    let pdf_val = light_pdf.value(scattered.dir);
 
                     emitted
                         + albedo
-                            * ray_color(&scattered, background, world, depth - 1)
+                            * ray_color(&scattered, background, world, lights, depth - 1)
                             * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
                             / pdf_val
                 }
@@ -446,7 +457,7 @@ fn cornell_box() -> HittableList {
         white.clone(),
     )));
 
-    let mut box1: Arc<dyn Hittable + Send + Sync> = Arc::new(AABox::new(
+    let mut box1: Arc<dyn Hittable> = Arc::new(AABox::new(
         Point3 {
             x: 0.0,
             y: 0.0,
@@ -470,7 +481,7 @@ fn cornell_box() -> HittableList {
     ));
     objects.add(box1);
 
-    let mut box2: Arc<dyn Hittable + Send + Sync> = Arc::new(AABox::new(
+    let mut box2: Arc<dyn Hittable> = Arc::new(AABox::new(
         Point3 {
             x: 0.0,
             y: 0.0,
@@ -553,7 +564,7 @@ fn cornell_smoke() -> HittableList {
         white.clone(),
     )));
 
-    let mut box1: Arc<dyn Hittable + Send + Sync> = Arc::new(AABox::new(
+    let mut box1: Arc<dyn Hittable> = Arc::new(AABox::new(
         Point3 {
             x: 0.0,
             y: 0.0,
@@ -576,7 +587,7 @@ fn cornell_smoke() -> HittableList {
         },
     ));
 
-    let mut box2: Arc<dyn Hittable + Send + Sync> = Arc::new(AABox::new(
+    let mut box2: Arc<dyn Hittable> = Arc::new(AABox::new(
         Point3 {
             x: 0.0,
             y: 0.0,
@@ -809,7 +820,7 @@ fn final_scene() -> HittableList {
 
 fn main() {
     //path
-    let path = std::path::Path::new("output/book3/image6.jpg");
+    let path = std::path::Path::new("output/book3/image7.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -828,6 +839,14 @@ fn main() {
     let mut aperture = 0.0;
     let mut background = Color::new();
 
+    let lights = Arc::new(XZRect::new(
+        213.0,
+        343.0,
+        227.0,
+        332.0,
+        554.0,
+        Arc::new(Lambertian::new(Vec3::new())),
+    ));
     let world_type = 6;
     match world_type {
         1 => {
@@ -932,7 +951,7 @@ fn main() {
             world = cornell_box();
             aspect_ratio = 1.0;
             image_width = 600;
-            samples_per_pixel = 1000;
+            samples_per_pixel = 10;
             background = Color {
                 x: 0.0,
                 y: 0.0,
@@ -1028,6 +1047,7 @@ fn main() {
         let (tx, rx) = mpsc::channel();
         receivers.push(rx);
         let world_tmp = world.clone();
+        let lights_tmp = lights.clone();
         let pb = multi_progress.add(ProgressBar::new(task.len() as u64 / PROGRESS_INC_NUM));
         let mut count = 0;
         let cur_thread: thread::JoinHandle<()> = thread::spawn(move || {
@@ -1038,7 +1058,8 @@ fn main() {
                     let u = (i as f64 + random_double_default()) / ((image_width - 1) as f64);
                     let v = (j as f64 + random_double_default()) / ((image_height - 1) as f64);
                     let r = cam.get_ray(u, v, 0.0, 1.0);
-                    pixel_color += ray_color(&r, background, &world_tmp, max_depth);
+                    pixel_color +=
+                        ray_color(&r, background, &world_tmp, lights_tmp.clone(), max_depth);
                 }
                 tx.send(ColorInformation::new(i, image_height - j - 1, pixel_color))
                     .unwrap();

@@ -1,17 +1,26 @@
 use crate::*;
 
-//pub use std::sync::AArc;
 pub use std::sync::Arc;
-pub trait Hittable {
+pub trait Hittable: Sync + Send {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB>;
+    fn pdf_value(&self, _o: Point3, _v: Vec3) -> f64 {
+        0.0
+    }
+    fn random(&self, _o: Vec3) -> Vec3 {
+        Vec3 {
+            x: 1.0,
+            y: 0.0,
+            z: 0.0,
+        }
+    }
 }
 
 #[derive(Clone)]
 pub struct HitRecord {
     pub p: Vec3,
     pub normal: Vec3,
-    pub mat_ptr: Arc<dyn Material + Send + Sync>,
+    pub mat_ptr: Arc<dyn Material>,
     pub t: f64,
     pub u: f64,
     pub v: f64,
@@ -27,7 +36,7 @@ impl HitRecord {
     //         front_face: false,
     //     }
     // }
-    pub fn new(t: f64, p: Vec3, mat_ptr: &Arc<dyn Material + Send + Sync>) -> HitRecord {
+    pub fn new(t: f64, p: Vec3, mat_ptr: &Arc<dyn Material>) -> HitRecord {
         HitRecord {
             p,
             normal: Vec3 {
@@ -54,12 +63,12 @@ impl HitRecord {
 }
 
 pub struct Translate {
-    pub ptr: Arc<dyn Hittable + Send + Sync>,
+    pub ptr: Arc<dyn Hittable>,
     pub offset: Vec3,
 }
 
 impl Translate {
-    pub fn new(p: Arc<dyn Hittable + Send + Sync>, displacement: Vec3) -> Translate {
+    pub fn new(p: Arc<dyn Hittable>, displacement: Vec3) -> Translate {
         Translate {
             ptr: p,
             offset: displacement,
@@ -90,14 +99,14 @@ impl Hittable for Translate {
 }
 
 pub struct RotateY {
-    pub ptr: Arc<dyn Hittable + Send + Sync>,
+    pub ptr: Arc<dyn Hittable>,
     pub sin_theta: f64,
     pub cos_theta: f64,
     pub bbox: Option<AABB>,
 }
 
 impl RotateY {
-    pub fn new(p: Arc<dyn Hittable + Send + Sync>, angle: f64) -> RotateY {
+    pub fn new(p: Arc<dyn Hittable>, angle: f64) -> RotateY {
         let radians = degrees_to_radians(angle);
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();
@@ -189,11 +198,11 @@ impl Hittable for RotateY {
 }
 
 pub struct FlipFace {
-    pub ptr: Arc<dyn Hittable + Sync + Send>,
+    pub ptr: Arc<dyn Hittable>,
 }
 
 impl FlipFace {
-    pub fn new(p: Arc<dyn Hittable + Sync + Send>) -> FlipFace {
+    pub fn new(p: Arc<dyn Hittable>) -> FlipFace {
         FlipFace { ptr: p }
     }
 }

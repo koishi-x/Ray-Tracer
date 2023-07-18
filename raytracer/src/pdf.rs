@@ -1,6 +1,5 @@
 use crate::*;
 
-//#[allow(clippy::upper_case_acronyms)]
 pub trait Pdf {
     fn value(&self, direction: Vec3) -> f64;
     fn generate(&self) -> Vec3;
@@ -39,5 +38,25 @@ impl Pdf for CosinePdf {
     }
     fn generate(&self) -> Vec3 {
         self.uvw.local_vec(random_cosine_direction())
+    }
+}
+
+pub struct HittablePdf {
+    o: Point3,
+    ptr: Arc<dyn Hittable>,
+}
+
+impl HittablePdf {
+    pub fn new(p: Arc<dyn Hittable>, origin: Point3) -> HittablePdf {
+        HittablePdf { o: origin, ptr: p }
+    }
+}
+
+impl Pdf for HittablePdf {
+    fn value(&self, direction: Vec3) -> f64 {
+        self.ptr.pdf_value(self.o, direction)
+    }
+    fn generate(&self) -> Vec3 {
+        self.ptr.random(self.o)
     }
 }

@@ -1,24 +1,20 @@
 use crate::*;
 
 pub struct ConstantMedium {
-    pub boundary: Arc<dyn Hittable + Send + Sync>,
-    pub phase_function: Arc<dyn Material + Send + Sync>,
+    pub boundary: Arc<dyn Hittable>,
+    pub phase_function: Arc<dyn Material>,
     pub neg_inv_density: f64,
 }
 
 impl ConstantMedium {
-    pub fn new(
-        b: Arc<dyn Hittable + Send + Sync>,
-        d: f64,
-        a: Arc<dyn Texture + Send + Sync>,
-    ) -> ConstantMedium {
+    pub fn new(b: Arc<dyn Hittable>, d: f64, a: Arc<dyn Texture>) -> ConstantMedium {
         ConstantMedium {
             boundary: b,
             phase_function: Arc::new(Isotropic::new(a)),
             neg_inv_density: -1.0 / d,
         }
     }
-    pub fn new_color(b: Arc<dyn Hittable + Send + Sync>, d: f64, c: Color) -> ConstantMedium {
+    pub fn new_color(b: Arc<dyn Hittable>, d: f64, c: Color) -> ConstantMedium {
         ConstantMedium {
             boundary: b,
             phase_function: Arc::new(Isotropic::new_color(c)),

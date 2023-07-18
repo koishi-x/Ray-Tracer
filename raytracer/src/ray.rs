@@ -14,13 +14,13 @@ impl Ray {
     //         dir: Vec3::new(),
     //     }
     // }
-    // pub fn new(origin: Point3, direction: Vec3) -> Ray {
-    //     Ray {
-    //         orig: origin,
-    //         dir: direction,
-    //         tm: 0.0,
-    //     }
-    // }
+    pub fn new(origin: Point3, direction: Vec3) -> Ray {
+        Ray {
+            orig: origin,
+            dir: direction,
+            tm: 0.0,
+        }
+    }
 
     pub fn new_tm(origin: Point3, direction: Vec3, time: f64) -> Ray {
         Ray {

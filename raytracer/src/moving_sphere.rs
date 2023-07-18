@@ -6,7 +6,7 @@ pub struct MovingSphere {
     pub time0: f64,
     pub time1: f64,
     pub radius: f64,
-    pub mat_ptr: Arc<dyn Material + Send + Sync>,
+    pub mat_ptr: Arc<dyn Material>,
 }
 
 impl MovingSphere {

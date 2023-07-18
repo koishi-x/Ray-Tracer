@@ -5,11 +5,8 @@ pub use hittable::*;
 
 #[derive(Clone)]
 pub struct HittableList {
-    pub objects: Vec<Arc<dyn Hittable + Send + Sync>>,
+    pub objects: Vec<Arc<dyn Hittable>>,
 }
-
-unsafe impl Send for HittableList {}
-unsafe impl Sync for HittableList {}
 
 impl HittableList {
     pub fn new() -> Self {
@@ -18,7 +15,7 @@ impl HittableList {
         }
     }
 
-    pub fn add(&mut self, object: Arc<dyn Hittable + Send + Sync>) {
+    pub fn add(&mut self, object: Arc<dyn Hittable>) {
         self.objects.push(object);
     }
 

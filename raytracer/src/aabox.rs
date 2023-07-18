@@ -7,7 +7,7 @@ pub struct AABox {
 }
 
 impl AABox {
-    pub fn new(p0: Point3, p1: Point3, ptr: Arc<dyn Material + Send + Sync>) -> AABox {
+    pub fn new(p0: Point3, p1: Point3, ptr: Arc<dyn Material>) -> AABox {
         let mut sides = HittableList::new();
         sides.add(Arc::new(XYRect::new(
             p0.x,

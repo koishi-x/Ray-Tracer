@@ -3,7 +3,7 @@
 use crate::random_double_default;
 use crate::*;
 
-pub trait Material {
+pub trait Material: Send + Sync {
     fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, pdf: &mut f64) -> Option<(Vec3, Ray)> {
         None
     }
@@ -16,7 +16,7 @@ pub trait Material {
 }
 
 pub struct Lambertian {
-    pub albedo: Arc<dyn Texture + Send + Sync>,
+    pub albedo: Arc<dyn Texture>,
 }
 
 impl Lambertian {
@@ -25,7 +25,7 @@ impl Lambertian {
             albedo: Arc::new(SolidColor::new(a)),
         }
     }
-    pub fn new_texture(a: Arc<dyn Texture + Send + Sync>) -> Lambertian {
+    pub fn new_texture(a: Arc<dyn Texture>) -> Lambertian {
         Lambertian { albedo: a }
     }
 }
@@ -154,7 +154,7 @@ impl Material for Dielectric {
 }
 
 pub struct DiffuseLight {
-    pub emit: Arc<dyn Texture + Send + Sync>,
+    pub emit: Arc<dyn Texture>,
 }
 
 impl DiffuseLight {
@@ -163,7 +163,7 @@ impl DiffuseLight {
             emit: Arc::new(SolidColor::new(c)),
         }
     }
-    pub fn new_texture(a: Arc<dyn Texture + Send + Sync>) -> DiffuseLight {
+    pub fn new_texture(a: Arc<dyn Texture>) -> DiffuseLight {
         DiffuseLight { emit: a }
     }
 }
@@ -182,7 +182,7 @@ impl Material for DiffuseLight {
 }
 
 pub struct Isotropic {
-    pub albedo: Arc<dyn Texture + Send + Sync>,
+    pub albedo: Arc<dyn Texture>,
 }
 
 impl Isotropic {
@@ -191,7 +191,7 @@ impl Isotropic {
             albedo: Arc::new(SolidColor::new(c)),
         }
     }
-    pub fn new(a: Arc<dyn Texture + Send + Sync>) -> Isotropic {
+    pub fn new(a: Arc<dyn Texture>) -> Isotropic {
         Isotropic { albedo: a }
     }
 }

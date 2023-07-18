@@ -3,7 +3,7 @@
 use crate::*;
 
 pub struct XYRect {
-    pub mp: Arc<dyn Material + Send + Sync>,
+    pub mp: Arc<dyn Material>,
     pub x0: f64,
     pub x1: f64,
     pub y0: f64,
@@ -12,14 +12,7 @@ pub struct XYRect {
 }
 
 impl XYRect {
-    pub fn new(
-        x0: f64,
-        x1: f64,
-        y0: f64,
-        y1: f64,
-        k: f64,
-        mat: Arc<dyn Material + Send + Sync>,
-    ) -> XYRect {
+    pub fn new(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, mat: Arc<dyn Material>) -> XYRect {
         XYRect {
             mp: mat,
             x0,
@@ -70,7 +63,7 @@ impl Hittable for XYRect {
 }
 
 pub struct XZRect {
-    pub mp: Arc<dyn Material + Send + Sync>,
+    pub mp: Arc<dyn Material>,
     pub x0: f64,
     pub x1: f64,
     pub z0: f64,
@@ -79,14 +72,7 @@ pub struct XZRect {
 }
 
 impl XZRect {
-    pub fn new(
-        x0: f64,
-        x1: f64,
-        z0: f64,
-        z1: f64,
-        k: f64,
-        mat: Arc<dyn Material + Send + Sync>,
-    ) -> XZRect {
+    pub fn new(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, mat: Arc<dyn Material>) -> XZRect {
         XZRect {
             mp: mat,
             x0,
@@ -134,10 +120,29 @@ impl Hittable for XZRect {
         rec.v = (z - self.z0) / (self.z1 - self.z0);
         Some(rec)
     }
+    fn pdf_value(&self, origin: Point3, v: Vec3) -> f64 {
+        match self.hit(&Ray::new(origin, v), 0.001, INFINITY) {
+            None => 0.0,
+            Some(rec) => {
+                let area = (self.x1 - self.x0) * (self.z1 - self.z0);
+                let distance_squared = rec.t * rec.t * v.length_squared();
+                let cosine = (dot(v, rec.normal) / v.length()).abs();
+                distance_squared / (cosine * area)
+            }
+        }
+    }
+    fn random(&self, origin: Vec3) -> Vec3 {
+        let random_point = Point3 {
+            x: random_double(self.x0, self.x1),
+            y: self.k,
+            z: random_double(self.z0, self.z1),
+        };
+        random_point - origin
+    }
 }
 
 pub struct YZRect {
-    pub mp: Arc<dyn Material + Send + Sync>,
+    pub mp: Arc<dyn Material>,
     pub y0: f64,
     pub y1: f64,
     pub z0: f64,
@@ -146,14 +151,7 @@ pub struct YZRect {
 }
 
 impl YZRect {
-    pub fn new(
-        y0: f64,
-        y1: f64,
-        z0: f64,
-        z1: f64,
-        k: f64,
-        mat: Arc<dyn Material + Send + Sync>,
-    ) -> YZRect {
+    pub fn new(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, mat: Arc<dyn Material>) -> YZRect {
         YZRect {
             mp: mat,
             y0,

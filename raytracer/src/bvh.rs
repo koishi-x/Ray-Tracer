@@ -4,8 +4,8 @@ use std::cmp::Ordering;
 use crate::*;
 
 pub struct BvhNode {
-    left: Arc<dyn Hittable + Send + Sync>,
-    right: Arc<dyn Hittable + Send + Sync>,
+    left: Arc<dyn Hittable>,
+    right: Arc<dyn Hittable>,
     box_: AABB,
 }
 
@@ -35,7 +35,7 @@ impl Hittable for BvhNode {
 
 impl BvhNode {
     pub fn new(
-        mut src_objects: Vec<Arc<dyn Hittable + Send + Sync>>,
+        mut src_objects: Vec<Arc<dyn Hittable>>,
         start: usize,
         end: usize,
         time0: f64,
@@ -49,15 +49,15 @@ impl BvhNode {
         };
 
         let object_span = end - start;
-        // let mut left: Arc<dyn Hittable + Send + Sync>;
-        // let mut right: Arc<dyn Hittable + Send + Sync>;
+        // let mut left: Arc<dyn Hittable>;
+        // let mut right: Arc<dyn Hittable>;
 
         // if object_span == 1 {
         //     left = sArc_objects[start].clone();
         //     right =
         // }
-        let left: Arc<dyn Hittable + Send + Sync>;
-        let right: Arc<dyn Hittable + Send + Sync>;
+        let left: Arc<dyn Hittable>;
+        let right: Arc<dyn Hittable>;
 
         if object_span == 1 {
             left = src_objects[start].clone();
@@ -92,11 +92,7 @@ impl BvhNode {
 }
 
 #[allow(dead_code)]
-fn box_compare(
-    a: &Arc<dyn Hittable + Send + Sync>,
-    b: &Arc<dyn Hittable + Send + Sync>,
-    axis: i32,
-) -> Option<bool> {
+fn box_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>, axis: i32) -> Option<bool> {
     match a.bounding_box(0.0, 0.0) {
         None => None,
         Some(box_a) => match b.bounding_box(0.0, 0.0) {
@@ -111,10 +107,7 @@ fn box_compare(
     }
 }
 
-fn box_x_compare(
-    a: &Arc<dyn Hittable + Send + Sync>,
-    b: &Arc<dyn Hittable + Send + Sync>,
-) -> Ordering {
+fn box_x_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>) -> Ordering {
     match box_compare(a, b, 0) {
         None => {
             eprintln!("No bounding box in bvh_node constructor.\n");
@@ -130,10 +123,7 @@ fn box_x_compare(
     }
 }
 
-fn box_y_compare(
-    a: &Arc<dyn Hittable + Send + Sync>,
-    b: &Arc<dyn Hittable + Send + Sync>,
-) -> Ordering {
+fn box_y_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>) -> Ordering {
     match box_compare(a, b, 1) {
         None => {
             eprintln!("No bounding box in bvh_node constructor.\n");
@@ -149,10 +139,7 @@ fn box_y_compare(
     }
 }
 
-fn box_z_compare(
-    a: &Arc<dyn Hittable + Send + Sync>,
-    b: &Arc<dyn Hittable + Send + Sync>,
-) -> Ordering {
+fn box_z_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>) -> Ordering {
     match box_compare(a, b, 2) {
         None => {
             eprintln!("No bounding box in bvh_node constructor.\n");

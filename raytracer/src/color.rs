@@ -20,6 +20,3 @@ impl ColorInformation {
         ColorInformation { i, j, color }
     }
 }
-
-unsafe impl Send for ColorInformation {}
-unsafe impl Sync for ColorInformation {}

@@ -455,9 +455,16 @@ fn cornell_box() -> HittableList {
         555.0,
         white.clone(),
     )));
-    objects.add(Arc::new(XYRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
+    objects.add(Arc::new(XYRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        white.clone(),
+    )));
 
-    let aluminum = Arc::new(Metal::new(
+    let _aluminum = Arc::new(Metal::new(
         Color {
             x: 0.8,
             y: 0.85,
@@ -476,7 +483,7 @@ fn cornell_box() -> HittableList {
             y: 330.0,
             z: 165.0,
         },
-        aluminum,
+        white,
     ));
     box1 = Arc::new(RotateY::new(box1, 15.0));
     box1 = Arc::new(Translate::new(
@@ -489,7 +496,6 @@ fn cornell_box() -> HittableList {
     ));
     objects.add(box1);
 
-    let glass = Arc::new(Dielectric::new(1.5));
     // let mut box2: Arc<dyn Hittable> = Arc::new(AABox::new(
     //     Point3 {
     //         x: 0.0,
@@ -501,7 +507,7 @@ fn cornell_box() -> HittableList {
     //         y: 165.0,
     //         z: 165.0,
     //     },
-    //     glass,
+    //     white,
     // ));
     // box2 = Arc::new(RotateY::new(box2, -18.0));
     // box2 = Arc::new(Translate::new(
@@ -513,6 +519,8 @@ fn cornell_box() -> HittableList {
     //     },
     // ));
     // objects.add(box2);
+
+    let glass = Arc::new(Dielectric::new(1.5));
     objects.add(Arc::new(Sphere {
         center: Point3 {
             x: 190.0,
@@ -524,9 +532,6 @@ fn cornell_box() -> HittableList {
     }));
 
     objects
-    // let mut bvh = HittableList::new();
-    // bvh.add(Arc::new(BvhNode::new_hittablelist(objects, 0.0, 1.0)));
-    // bvh
 }
 
 fn cornell_smoke() -> HittableList {
@@ -838,7 +843,7 @@ fn final_scene() -> HittableList {
 
 fn main() {
     //path
-    let path = std::path::Path::new("output/book3/image9.jpg");
+    let path = std::path::Path::new("output/book3/image11.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -857,14 +862,33 @@ fn main() {
     let mut aperture = 0.0;
     let mut background = Color::new();
 
-    let lights = Arc::new(XZRect::new(
+    let mut lights_list = HittableList::new();
+    lights_list.add(Arc::new(XZRect::new(
         213.0,
         343.0,
         227.0,
         332.0,
         554.0,
         Arc::new(Lambertian::new(Vec3::new())),
-    ));
+    )));
+    lights_list.add(Arc::new(Sphere {
+        center: Point3 {
+            x: 190.0,
+            y: 90.0,
+            z: 190.0,
+        },
+        radius: 90.0,
+        mat_ptr: Arc::new(Lambertian::new(Vec3::new())),
+    }));
+    let lights = Arc::new(lights_list);
+    // let lights = Arc::new(XZRect::new(
+    //     213.0,
+    //     343.0,
+    //     227.0,
+    //     332.0,
+    //     554.0,
+    //     Arc::new(Lambertian::new(Vec3::new())),
+    // ));
     let world_type = 6;
     match world_type {
         1 => {

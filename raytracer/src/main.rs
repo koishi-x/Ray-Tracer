@@ -5,6 +5,7 @@ mod aabox;
 mod aarect;
 mod bvh;
 mod camera;
+mod canny;
 mod color;
 mod constant_medium;
 mod hittable_list;
@@ -29,6 +30,7 @@ use aabox::*;
 use aarect::*;
 use bvh::*;
 use camera::*;
+use canny::*;
 use color::*;
 use constant_medium::*;
 use hittable_list::*;
@@ -842,8 +844,10 @@ fn final_scene() -> HittableList {
 }
 
 fn main() {
+    let path_str = "output/book3/image11.jpg";
+    let edge_check_str = "output/book3/image11_edge.jpg";
     //path
-    let path = std::path::Path::new("output/book3/image11.jpg");
+    let path = std::path::Path::new(path_str);
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -1138,5 +1142,6 @@ fn main() {
         Err(_) => println!("{}", style("Outputting image fails.").red()),
     }
 
+    canny_check(path_str, edge_check_str);
     exit(0);
 }

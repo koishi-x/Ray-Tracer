@@ -2,8 +2,8 @@
 
 use crate::*;
 
-pub struct XYRect {
-    pub mp: Arc<dyn Material>,
+pub struct XYRect<M: Material> {
+    pub mp: M,
     pub x0: f64,
     pub x1: f64,
     pub y0: f64,
@@ -11,8 +11,8 @@ pub struct XYRect {
     pub k: f64,
 }
 
-impl XYRect {
-    pub fn new(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, mat: Arc<dyn Material>) -> XYRect {
+impl<M: Material> XYRect<M> {
+    pub fn new(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, mat: M) -> Self {
         XYRect {
             mp: mat,
             x0,
@@ -24,7 +24,7 @@ impl XYRect {
     }
 }
 
-impl Hittable for XYRect {
+impl<M: Material> Hittable for XYRect<M> {
     fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
         Some(AABB {
             minimum: Point3 {
@@ -62,8 +62,8 @@ impl Hittable for XYRect {
     }
 }
 
-pub struct XZRect {
-    pub mp: Arc<dyn Material>,
+pub struct XZRect<M: Material> {
+    pub mp: M,
     pub x0: f64,
     pub x1: f64,
     pub z0: f64,
@@ -71,8 +71,8 @@ pub struct XZRect {
     pub k: f64,
 }
 
-impl XZRect {
-    pub fn new(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, mat: Arc<dyn Material>) -> XZRect {
+impl<M: Material> XZRect<M> {
+    pub fn new(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, mat: M) -> XZRect<M> {
         XZRect {
             mp: mat,
             x0,
@@ -84,7 +84,7 @@ impl XZRect {
     }
 }
 
-impl Hittable for XZRect {
+impl<M: Material> Hittable for XZRect<M> {
     fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
         Some(AABB {
             minimum: Point3 {
@@ -141,8 +141,8 @@ impl Hittable for XZRect {
     }
 }
 
-pub struct YZRect {
-    pub mp: Arc<dyn Material>,
+pub struct YZRect<M: Material> {
+    pub mp: M,
     pub y0: f64,
     pub y1: f64,
     pub z0: f64,
@@ -150,8 +150,8 @@ pub struct YZRect {
     pub k: f64,
 }
 
-impl YZRect {
-    pub fn new(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, mat: Arc<dyn Material>) -> YZRect {
+impl<M: Material> YZRect<M> {
+    pub fn new(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, mat: M) -> YZRect<M> {
         YZRect {
             mp: mat,
             y0,
@@ -163,7 +163,7 @@ impl YZRect {
     }
 }
 
-impl Hittable for YZRect {
+impl<M: Material> Hittable for YZRect<M> {
     fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
         Some(AABB {
             minimum: Point3 {

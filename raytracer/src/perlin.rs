@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 
 use crate::*;
+
+#[derive(Clone)]
 pub struct Perlin {
     //ranfloat: Vec<f64>,
     ranvec: Vec<Vec3>,

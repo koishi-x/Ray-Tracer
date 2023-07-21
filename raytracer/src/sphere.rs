@@ -1,13 +1,13 @@
 use crate::*;
 
 #[derive(Clone)]
-pub struct Sphere {
+pub struct Sphere<M: Material> {
     pub center: Vec3,
     pub radius: f64,
-    pub mat_ptr: Arc<dyn Material>,
+    pub mat_ptr: M,
 }
 
-impl Sphere {
+impl<M: Material> Sphere<M> {
     // pub fn new() -> Self {
     //     Sphere {
     //         center: Vec3::new(),
@@ -32,7 +32,7 @@ impl Sphere {
     }
 }
 
-impl Hittable for Sphere {
+impl<M: Material> Hittable for Sphere<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.orig - self.center;
         let a = r.dir.length_squared();
@@ -57,7 +57,7 @@ impl Hittable for Sphere {
         //let mat_ptr = self.mat_ptr;
         let mut rec = HitRecord::new(t, p, &self.mat_ptr);
         rec.set_face_normal(r, outward_normal);
-        (rec.u, rec.v) = Sphere::get_sphere_uv(outward_normal);
+        (rec.u, rec.v) = Self::get_sphere_uv(outward_normal);
 
         Some(rec)
     }

@@ -8,6 +8,7 @@ pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: Point3) -> Color;
 }
 
+#[derive(Clone)]
 pub struct SolidColor {
     color_value: Color,
 }
@@ -24,21 +25,22 @@ impl Texture for SolidColor {
     }
 }
 
-pub struct CheckerTexture {
-    pub odd: Arc<dyn Texture>,
-    pub even: Arc<dyn Texture>,
+#[derive(Clone)]
+pub struct CheckerTexture<T1: Texture, T2: Texture> {
+    pub odd: T1,
+    pub even: T2,
 }
 
-impl CheckerTexture {
-    pub fn new(c1: Color, c2: Color) -> CheckerTexture {
+impl CheckerTexture<SolidColor, SolidColor> {
+    pub fn new(c1: Color, c2: Color) -> Self {
         CheckerTexture {
-            odd: Arc::new(SolidColor::new(c1)),
-            even: Arc::new(SolidColor::new(c2)),
+            odd: SolidColor::new(c1),
+            even: SolidColor::new(c2),
         }
     }
 }
 
-impl Texture for CheckerTexture {
+impl<T1: Texture, T2: Texture> Texture for CheckerTexture<T1, T2> {
     fn value(&self, u: f64, v: f64, p: Point3) -> Color {
         let sines = (10.0 * p.x).sin() * (10.0 * p.y).sin() * (10.0 * p.z).sin();
         if sines < 0.0 {
@@ -49,6 +51,7 @@ impl Texture for CheckerTexture {
     }
 }
 
+#[derive(Clone)]
 pub struct NoiseTexture {
     pub noise: Perlin,
     pub scale: f64,
@@ -90,6 +93,7 @@ impl NoiseTexture {
     }
 }
 
+#[derive(Clone)]
 pub struct ImageTexture {
     data: image::DynamicImage,
     width: u32,

@@ -49,13 +49,7 @@ impl BvhNode {
         };
 
         let object_span = end - start;
-        // let mut left: Arc<dyn Hittable>;
-        // let mut right: Arc<dyn Hittable>;
 
-        // if object_span == 1 {
-        //     left = sArc_objects[start].clone();
-        //     right =
-        // }
         let left: Arc<dyn Hittable>;
         let right: Arc<dyn Hittable>;
 

@@ -7,7 +7,7 @@ pub struct ScatterRecord {
     pub specular_ray: Ray,
     pub is_specular: bool,
     pub attenuation: Color,
-    pub pdf_ptr: Arc<dyn Pdf>,
+    pub pdf_ptr: Box<dyn Pdf>,
 }
 
 pub trait Material: Send + Sync {
@@ -22,22 +22,26 @@ pub trait Material: Send + Sync {
     }
 }
 
-pub struct Lambertian {
-    pub albedo: Arc<dyn Texture>,
+#[derive(Clone)]
+pub struct Lambertian<T: Texture> {
+    pub albedo: T,
 }
 
-impl Lambertian {
-    pub fn new(a: Color) -> Lambertian {
+impl Lambertian<SolidColor> {
+    pub fn new(a: Color) -> Self {
         Lambertian {
-            albedo: Arc::new(SolidColor::new(a)),
+            albedo: SolidColor::new(a),
         }
     }
-    pub fn new_texture(a: Arc<dyn Texture>) -> Lambertian {
+}
+
+impl<T: Texture> Lambertian<T> {
+    pub fn new_texture(a: T) -> Self {
         Lambertian { albedo: a }
     }
 }
 
-impl Material for Lambertian {
+impl<T: Texture> Material for Lambertian<T> {
     // fn scatter(&self, r_in: &Ray, rec: &HitRecord, pdf: &mut f64) -> Option<(Vec3, Ray)> {
 
     //     let uvw = ONB::build_from_w(rec.normal);
@@ -54,7 +58,7 @@ impl Material for Lambertian {
             specular_ray: *r_in,
             is_specular: false,
             attenuation: self.albedo.value(rec.u, rec.v, rec.p),
-            pdf_ptr: Arc::new(CosinePdf::new(rec.normal)),
+            pdf_ptr: Box::new(CosinePdf::new(rec.normal)),
         })
     }
     fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
@@ -106,11 +110,12 @@ impl Material for Metal {
             ),
             is_specular: true,
             attenuation: self.albedo,
-            pdf_ptr: Arc::new(DefaultPdf {}),
+            pdf_ptr: Box::new(DefaultPdf {}),
         })
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct Dielectric {
     pub ir: f64,
 }
@@ -155,7 +160,7 @@ impl Material for Dielectric {
                 specular_ray: Ray::new_tm(rec.p, reflect(unit_direction, rec.normal), r_in.tm),
                 is_specular: true,
                 attenuation,
-                pdf_ptr: Arc::new(DefaultPdf {}),
+                pdf_ptr: Box::new(DefaultPdf {}),
             })
         } else {
             // Some((
@@ -174,7 +179,7 @@ impl Material for Dielectric {
                 ),
                 is_specular: true,
                 attenuation,
-                pdf_ptr: Arc::new(DefaultPdf {}),
+                pdf_ptr: Box::new(DefaultPdf {}),
             })
         }
 
@@ -188,22 +193,25 @@ impl Material for Dielectric {
     }
 }
 
-pub struct DiffuseLight {
-    pub emit: Arc<dyn Texture>,
+#[derive(Clone)]
+pub struct DiffuseLight<T: Texture> {
+    pub emit: T,
 }
 
-impl DiffuseLight {
-    pub fn new(c: Color) -> DiffuseLight {
+impl DiffuseLight<SolidColor> {
+    pub fn new(c: Color) -> Self {
         DiffuseLight {
-            emit: Arc::new(SolidColor::new(c)),
+            emit: SolidColor::new(c),
         }
     }
-    pub fn new_texture(a: Arc<dyn Texture>) -> DiffuseLight {
+}
+impl<T: Texture> DiffuseLight<T> {
+    pub fn new_texture(a: T) -> Self {
         DiffuseLight { emit: a }
     }
 }
 
-impl Material for DiffuseLight {
+impl<T: Texture> Material for DiffuseLight<T> {
     // fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, pdf: &mut f64) -> Option<(Vec3, Ray)> {
     //     None
     // }
@@ -216,22 +224,24 @@ impl Material for DiffuseLight {
     }
 }
 
-pub struct Isotropic {
-    pub albedo: Arc<dyn Texture>,
+pub struct Isotropic<T: Texture> {
+    pub albedo: T,
 }
 
-impl Isotropic {
-    pub fn new_color(c: Color) -> Isotropic {
+impl Isotropic<SolidColor> {
+    pub fn new_color(c: Color) -> Self {
         Isotropic {
-            albedo: Arc::new(SolidColor::new(c)),
+            albedo: SolidColor::new(c),
         }
     }
-    pub fn new(a: Arc<dyn Texture>) -> Isotropic {
+}
+impl<T: Texture> Isotropic<T> {
+    pub fn new(a: T) -> Self {
         Isotropic { albedo: a }
     }
 }
 
-impl Material for Isotropic {
+impl<T: Texture> Material for Isotropic<T> {
     // fn scatter(&self, r_in: &Ray, rec: &HitRecord, pdf: &mut f64) -> Option<(Vec3, Ray)> {
     //     Some((
     //         self.albedo.value(rec.u, rec.v, rec.p),

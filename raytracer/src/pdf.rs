@@ -62,18 +62,18 @@ impl Pdf for CosinePdf {
     }
 }
 
-pub struct HittablePdf {
+pub struct HittablePdf<'a, H: Hittable> {
     o: Point3,
-    ptr: Arc<dyn Hittable>,
+    ptr: &'a H,
 }
 
-impl HittablePdf {
-    pub fn new(p: Arc<dyn Hittable>, origin: Point3) -> HittablePdf {
+impl<'a, H: Hittable> HittablePdf<'a, H> {
+    pub fn new(p: &'a H, origin: Point3) -> Self {
         HittablePdf { o: origin, ptr: p }
     }
 }
 
-impl Pdf for HittablePdf {
+impl<'a, H: Hittable> Pdf for HittablePdf<'a, H> {
     fn value(&self, direction: Vec3) -> f64 {
         self.ptr.pdf_value(self.o, direction)
     }
@@ -82,25 +82,27 @@ impl Pdf for HittablePdf {
     }
 }
 
-pub struct MixturePdf {
-    pub p: [Arc<dyn Pdf>; 2],
+pub struct MixturePdf<'a> {
+    //pub p: [Arc<dyn Pdf>; 2],
+    pub p0: &'a dyn Pdf,
+    pub p1: &'a dyn Pdf,
 }
 
-impl MixturePdf {
-    pub fn new(p0: Arc<dyn Pdf>, p1: Arc<dyn Pdf>) -> MixturePdf {
-        MixturePdf { p: [p0, p1] }
+impl<'a> MixturePdf<'a> {
+    pub fn new(p0: &'a dyn Pdf, p1: &'a dyn Pdf) -> Self {
+        MixturePdf { p0, p1 }
     }
 }
 
-impl Pdf for MixturePdf {
+impl<'a> Pdf for MixturePdf<'a> {
     fn value(&self, direction: Vec3) -> f64 {
-        0.5 * self.p[0].value(direction) + 0.5 * self.p[1].value(direction)
+        0.5 * self.p0.value(direction) + 0.5 * self.p1.value(direction)
     }
     fn generate(&self) -> Vec3 {
         if random_double_default() < 0.5 {
-            self.p[0].generate()
+            self.p0.generate()
         } else {
-            self.p[1].generate()
+            self.p1.generate()
         }
     }
 }

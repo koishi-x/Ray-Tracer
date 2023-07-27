@@ -104,7 +104,7 @@ fn main() {
     // loop_work();
     // exit(1);
 
-    let path_str = "output/final_scene";
+    let path_str = "output/final_scene.jpg";
 
     // let edge_check_str = "output/book0/image0_2_edge.jpg";
     // canny_check(path_str, edge_check_str);

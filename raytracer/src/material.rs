@@ -22,6 +22,11 @@ pub trait Material: Send + Sync {
     }
 }
 
+#[derive(Clone, Copy)]
+pub struct DefaultMaterial {}
+
+impl Material for DefaultMaterial {}
+
 #[derive(Clone)]
 pub struct Lambertian<T: Texture> {
     pub albedo: T,
@@ -212,9 +217,6 @@ impl<T: Texture> DiffuseLight<T> {
 }
 
 impl<T: Texture> Material for DiffuseLight<T> {
-    // fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, pdf: &mut f64) -> Option<(Vec3, Ray)> {
-    //     None
-    // }
     fn emitted(&self, r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: Point3) -> Color {
         if rec.front_face {
             self.emit.value(u, v, p)
@@ -248,4 +250,12 @@ impl<T: Texture> Material for Isotropic<T> {
     //         Ray::new_tm(rec.p, random_in_unit_sphere(), r_in.tm),
     //     ))
     // }
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
+        Some(ScatterRecord {
+            specular_ray: Ray::new_tm(rec.p, random_in_unit_sphere(), r_in.tm),
+            is_specular: true,
+            attenuation: self.albedo.value(rec.u, rec.v, rec.p),
+            pdf_ptr: Box::new(DefaultPdf {}),
+        })
+    }
 }

@@ -25,9 +25,6 @@ impl<M: Material> Sphere<M> {
         let theta = (-p.y).acos();
         let phi = (-p.z).atan2(p.x) + PI;
 
-        // *u = phi / (2.0 * PI);
-        // *v = theta / PI;
-
         (phi / (2.0 * PI), theta / PI)
     }
 }
@@ -54,7 +51,7 @@ impl<M: Material> Hittable for Sphere<M> {
         let t = root;
         let p = r.at(t);
         let outward_normal = (p - self.center) / self.radius;
-        //let mat_ptr = self.mat_ptr;
+
         let mut rec = HitRecord::new(t, p, &self.mat_ptr);
         rec.set_face_normal(r, outward_normal);
         (rec.u, rec.v) = Self::get_sphere_uv(outward_normal);
@@ -89,6 +86,7 @@ impl<M: Material> Hittable for Sphere<M> {
         }
     }
     fn random(&self, o: Vec3) -> Vec3 {
+        //println!("!!!!!\n");
         let direction = self.center - o;
         let distance_squared = direction.length_squared();
         let uvw = ONB::build_from_w(direction);

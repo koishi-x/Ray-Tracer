@@ -62,6 +62,7 @@ impl<H: Hittable, M: Material> Hittable for ConstantMedium<H, M> {
         let p = r.at(t);
 
         //Some(HitRecord { p, normal: Vec3 { x: 1.0, y: 1.0, z: 1.0 } , mat_ptr: self.phase_function, t, u: 0.0, v: 0.0, front_face: true })
+
         Some(HitRecord::new(t, p, &self.phase_function))
     }
 }

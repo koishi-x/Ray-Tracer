@@ -83,7 +83,7 @@ impl<H: Hittable> Hittable for Translate<H> {
             None => None,
             Some(mut rec) => {
                 rec.p += self.offset;
-                rec.set_face_normal(&moved_r, rec.normal);
+                // rec.set_face_normal(&moved_r, rec.normal);
                 Some(rec)
             }
         }
@@ -189,7 +189,8 @@ impl<H: Hittable> Hittable for RotateY<H> {
                 normal.z = -self.sin_theta * rec.normal.x + self.cos_theta * rec.normal.z;
 
                 rec.p = p;
-                rec.set_face_normal(&rotated_r, normal);
+                rec.normal = normal;
+                // rec.set_face_normal(&rotated_r, normal);
 
                 Some(rec)
             }

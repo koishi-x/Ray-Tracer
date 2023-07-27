@@ -7,6 +7,7 @@ pub struct BvhNode {
     left: Arc<dyn Hittable>,
     right: Arc<dyn Hittable>,
     box_: AABB,
+    mat_ptr: Option<Arc<dyn Material>>,
 }
 
 impl Hittable for BvhNode {
@@ -19,7 +20,7 @@ impl Hittable for BvhNode {
         // }
         self.box_.hit(r, t_min, t_max)?;
 
-        match self.left.hit(r, t_min, t_max) {
+        let res = match self.left.hit(r, t_min, t_max) {
             // None => match self.right.hit(r, t_min, t_max) {
             //     None => None,
             //     Some(rec) => Some(rec),
@@ -29,7 +30,14 @@ impl Hittable for BvhNode {
                 None => Some(rec),
                 Some(rec2) => Some(rec2),
             },
+        };
+        if let Some(mat) = self.mat_ptr.as_ref() {
+            if let Some(mut res_) = res {
+                res_.mat_ptr = mat.as_ref();
+                return Some(res_);
+            }
         }
+        res
     }
 }
 
@@ -65,7 +73,6 @@ impl BvhNode {
                 right = src_objects[start].clone();
             }
         } else {
-            //sArc_objects[start..end].sort_by(|a, b| comparator(a, b));
             src_objects[start..end].sort_by(comparator);
             let mid = start + object_span / 2;
             left = Arc::new(BvhNode::new(src_objects.clone(), start, mid, time0, time1));
@@ -76,12 +83,29 @@ impl BvhNode {
             &(left.bounding_box(time0, time1).unwrap()),
             &(right.bounding_box(time0, time1).unwrap()),
         );
-        BvhNode { left, right, box_ }
+        BvhNode {
+            left,
+            right,
+            box_,
+            mat_ptr: None,
+        }
     }
     pub fn new_hittablelist(list: HittableList, time0: f64, time1: f64) -> Self {
         let len = list.objects.len();
         //println!("{len}");
         Self::new(list.objects, 0, len, time0, time1)
+    }
+    pub fn new_hittablelist_with_mat<M: Material + 'static>(
+        list: HittableList,
+        time0: f64,
+        time1: f64,
+        mat: M,
+    ) -> Self {
+        let len = list.objects.len();
+        //println!("{len}");
+        let mut res = Self::new(list.objects, 0, len, time0, time1);
+        res.mat_ptr = Some(Arc::new(mat));
+        res
     }
 }
 

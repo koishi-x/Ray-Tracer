@@ -17,3 +17,9 @@ output/
 *.Identifier
 test.sh
 *.pdf
+*.out
+
+
+
+
+report.md

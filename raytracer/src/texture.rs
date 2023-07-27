@@ -95,9 +95,9 @@ impl NoiseTexture {
 
 #[derive(Clone)]
 pub struct ImageTexture {
-    data: image::DynamicImage,
-    width: u32,
-    height: u32,
+    pub data: image::DynamicImage,
+    pub width: u32,
+    pub height: u32,
     //bytes_per_scanline: i32,
 }
 

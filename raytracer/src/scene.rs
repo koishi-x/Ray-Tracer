@@ -289,7 +289,7 @@ pub fn arknights() -> HittableList {
             y: 0.85,
             z: 0.88,
         },
-        0.0,
+        0.1,
     );
 
     let box_min = Point3 {

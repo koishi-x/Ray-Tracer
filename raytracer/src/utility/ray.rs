@@ -30,7 +30,7 @@ impl Ray {
         }
     }
 
-    pub fn at(&self, t: f64) -> vec3::Vec3 {
+    pub fn at(&self, t: f64) -> Vec3 {
         //self.orig.plus(&self.dir.multiply(t))
         self.orig + self.dir * t
     }

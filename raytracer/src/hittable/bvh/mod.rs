@@ -3,6 +3,8 @@ use std::cmp::Ordering;
 
 use crate::*;
 
+pub mod aabb;
+pub use aabb::*;
 pub struct BvhNode {
     left: Arc<dyn Hittable>,
     right: Arc<dyn Hittable>,

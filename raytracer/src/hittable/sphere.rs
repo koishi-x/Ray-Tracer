@@ -58,7 +58,7 @@ impl<M: Material> Hittable for Sphere<M> {
 
         Some(rec)
     }
-    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<crate::aabb::AABB> {
+    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<AABB> {
         Some(AABB::new(
             self.center
                 - Vec3 {

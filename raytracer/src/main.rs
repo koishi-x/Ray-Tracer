@@ -1,28 +1,12 @@
 #![allow(unused_imports, dead_code, unused_assignments)]
 
-mod aabb;
-mod aabox;
-mod aarect;
-mod bvh;
 mod camera;
-mod canny;
-mod color;
-mod constant_medium;
-mod hittable_list;
-mod image_box;
+mod hittable;
 mod material;
-mod moving_sphere;
-mod obj_loader;
-mod onb;
 mod pdf;
-mod perlin;
-mod ray;
-mod rtweekend;
 mod scene;
-mod sphere;
 mod texture;
-mod triangle;
-mod vec3;
+mod utility;
 
 use std::{
     ops::Deref,
@@ -30,29 +14,13 @@ use std::{
     thread,
 };
 
-use aabb::*;
-use aabox::*;
-use aarect::*;
-use bvh::*;
 use camera::*;
-use canny::*;
-use color::*;
-use constant_medium::*;
-use hittable_list::*;
-use image_box::*;
+use hittable::*;
 use material::*;
-use moving_sphere::*;
-use obj_loader::*;
-use onb::*;
 use pdf::*;
-use perlin::*;
-use ray::*;
-use rtweekend::*;
 use scene::*;
-use sphere::*;
 use texture::*;
-use triangle::*;
-use vec3::*;
+use utility::*;
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use std::time::Duration;
@@ -104,9 +72,9 @@ fn main() {
     // loop_work();
     // exit(1);
 
-    let path_str = "output/final_scene.jpg";
+    let path_str = "output/final_scene_with_blur.jpg";
 
-    // let edge_check_str = "output/book0/image0_2_edge.jpg";
+    // let edge_check_str = "output/111.jpg";
     // canny_check(path_str, edge_check_str);
     // exit(1);
 

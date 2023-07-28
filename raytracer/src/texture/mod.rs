@@ -2,6 +2,9 @@
 
 use image::GenericImageView;
 
+mod perlin;
+use perlin::*;
+
 use crate::*;
 
 pub trait Texture: Send + Sync {

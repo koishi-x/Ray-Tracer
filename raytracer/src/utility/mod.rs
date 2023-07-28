@@ -6,7 +6,17 @@ use rand::Rng;
 pub use std::f64::INFINITY;
 pub use std::{fs::File, process::exit};
 
-//pub mod
+pub mod canny;
+pub mod color;
+pub mod obj_loader;
+pub mod ray;
+pub mod vec3;
+
+pub use canny::*;
+pub use color::*;
+pub use obj_loader::*;
+pub use ray::*;
+pub use vec3::*;
 
 pub const PI: f64 = std::f64::consts::PI;
 

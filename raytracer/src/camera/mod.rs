@@ -1,9 +1,6 @@
 use std::sync;
 
-use crate::rtweekend::random_double;
-use crate::{random_in_unit_disk, unit_vector};
-
-use crate::{degrees_to_radians, Ray, Vec3};
+use crate::*;
 
 #[derive(Clone, Copy)]
 pub struct Camera {
